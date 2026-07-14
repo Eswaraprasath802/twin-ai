@@ -140,18 +140,18 @@ export default function DashboardPage() {
   const humidData = createSeries(24, 4.4, 40, 90, 0);
 
   return (
-    <div className="min-h-screen bg-space-950 grid-bg">
+    <div className="theme-shell grid-bg">
       <TopNav />
 
       <div className="pt-16 px-4 pb-8 max-w-[1920px] mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-200">Mission Control</h1>
-            <p className="text-sm text-slate-500">National Climate Intelligence Dashboard</p>
+            <h1 className="text-2xl font-bold theme-title">Mission Control</h1>
+            <p className="text-sm theme-subtitle">National Climate Intelligence Dashboard</p>
           </div>
           <div className="flex items-center gap-4 mt-3 md:mt-0">
-            <div className="text-xs text-slate-500 font-mono">
+            <div className="text-xs theme-subtitle font-mono">
               {time.toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
             </div>
             <div className="text-sm text-cyan-400 font-mono font-bold">

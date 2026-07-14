@@ -60,13 +60,13 @@ export default function AnalyticsPage() {
   const resilienceScores = createSeries(8, periodSeed + 2.1, 80, 96, 0);
 
   return (
-    <div className="min-h-screen bg-space-950 grid-bg">
+    <div className="theme-shell grid-bg">
       <TopNav />
       <div className="pt-16 px-4 pb-8 max-w-[1920px] mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-200">📊 Analytics Center</h1>
-            <p className="text-sm text-slate-500">Comprehensive climate and agricultural data analytics</p>
+            <h1 className="text-2xl font-bold theme-title">📊 Analytics Center</h1>
+            <p className="text-sm theme-subtitle">Comprehensive climate and agricultural data analytics</p>
           </div>
           <div className="flex items-center gap-2 mt-3 md:mt-0">
             {["7d", "30d", "90d", "1y", "5y"].map(p => (

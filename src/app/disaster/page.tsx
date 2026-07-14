@@ -64,13 +64,13 @@ export default function DisasterPage() {
   const filtered = filter === "all" ? alerts : alerts.filter(a => a.severity === filter);
 
   return (
-    <div className="min-h-screen bg-space-950 grid-bg">
+    <div className="theme-shell grid-bg">
       <TopNav />
       <div className="pt-16 px-4 pb-8 max-w-[1920px] mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-200">⚡ Disaster Management Center</h1>
-            <p className="text-sm text-slate-500">Real-time disaster monitoring, alerts & AI recommendations</p>
+            <h1 className="text-2xl font-bold theme-title">⚡ Disaster Management Center</h1>
+            <p className="text-sm theme-subtitle">Real-time disaster monitoring, alerts & AI recommendations</p>
           </div>
           <div className="flex items-center gap-2 mt-3 md:mt-0">
             {["all", "critical", "high", "medium", "low"].map(f => (

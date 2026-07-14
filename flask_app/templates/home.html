@@ -4,6 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TWIN AI — AI-Powered Digital Twin of India's Climate</title>
+    <script>
+        (function () {
+            const storageKey = 'twin-ai-theme';
+            const root = document.documentElement;
+            let theme = 'light';
+
+            try {
+                theme = localStorage.getItem(storageKey) || theme;
+            } catch (error) {
+                theme = 'light';
+            }
+
+            if (theme !== 'dark' && theme !== 'light') {
+                theme = 'light';
+            }
+
+            root.dataset.theme = theme;
+            root.style.colorScheme = theme;
+        })();
+    </script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         .hero-container {
@@ -115,13 +135,13 @@
         
         .hero-tagline {
             font-size: 18px;
-            color: #94a3b8;
+            color: var(--text-muted);
             margin-bottom: 8px;
         }
         
         .hero-description {
             font-size: 14px;
-            color: #64748b;
+            color: var(--text-soft);
             line-height: 1.7;
             margin-bottom: 32px;
         }
@@ -164,7 +184,7 @@
         
         .stat-label {
             font-size: 10px;
-            color: #64748b;
+            color: var(--text-soft);
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-top: 4px;
@@ -222,13 +242,13 @@
         .feature-title {
             font-size: 13px;
             font-weight: 600;
-            color: #e2e8f0;
+            color: var(--text-primary);
             margin-bottom: 4px;
         }
         
         .feature-desc {
             font-size: 11px;
-            color: #64748b;
+            color: var(--text-soft);
             line-height: 1.5;
         }
         
@@ -256,18 +276,30 @@
         .module-link:hover { transform: scale(1.05); }
         
         .module-icon { font-size: 24px; margin-bottom: 4px; }
-        .module-label { font-size: 10px; color: #94a3b8; }
+        .module-label { font-size: 10px; color: var(--text-faint); }
+
+        .home-theme-toggle {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            z-index: 20;
+        }
         
         .footer {
             margin-top: 60px;
             text-align: center;
             font-size: 11px;
-            color: #475569;
+            color: var(--text-faint);
         }
     </style>
 </head>
 <body class="grid-bg">
     <div class="hero-container">
+        <button type="button" class="theme-toggle home-theme-toggle" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
+            <span class="theme-toggle-icon" data-theme-icon>🌙</span>
+            <span data-theme-label>Dark</span>
+        </button>
+
         <!-- Particles -->
         <div class="particles" id="particles"></div>
         
@@ -288,7 +320,7 @@
                 <div class="hero-text fade-in-up" style="animation-delay: 0.2s">
                     <h1 class="hero-title">
                         <span class="holo-text">TWIN</span>
-                        <span style="color: #cbd5e1; margin-left: 12px;">AI</span>
+                        <span style="color: var(--text-secondary); margin-left: 12px;">AI</span>
                     </h1>
                     <p class="hero-tagline">AI-Powered Digital Twin of India's Climate</p>
                     <p class="hero-description">
@@ -327,15 +359,15 @@
                     <canvas id="earthCanvas"></canvas>
                     <div class="earth-data-point glass-card" style="top: 20px; right: 0;">
                         <div class="text-cyan font-mono">🌡 32.4°C</div>
-                        <div style="color: #64748b; font-size: 9px;">National Avg</div>
+                        <div style="color: var(--text-soft); font-size: 9px;">National Avg</div>
                     </div>
                     <div class="earth-data-point glass-card" style="bottom: 60px; left: 0; animation-delay: 1s;">
                         <div class="text-green font-mono">💧 67%</div>
-                        <div style="color: #64748b; font-size: 9px;">Humidity</div>
+                        <div style="color: var(--text-soft); font-size: 9px;">Humidity</div>
                     </div>
                     <div class="earth-data-point glass-card" style="top: 50%; right: 0; animation-delay: 2s;">
                         <div class="text-yellow font-mono">🛰 14</div>
-                        <div style="color: #64748b; font-size: 9px;">Satellites</div>
+                        <div style="color: var(--text-soft); font-size: 9px;">Satellites</div>
                     </div>
                 </div>
             </div>
@@ -400,6 +432,7 @@
         </div>
     </div>
 
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
         // Animated counters
         document.querySelectorAll('[data-count]').forEach(el => {

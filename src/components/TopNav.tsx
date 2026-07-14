@@ -6,6 +6,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { MoonStar, SunMedium } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: "◆" },
@@ -22,10 +24,11 @@ const NAV_ITEMS = [
 export default function TopNav() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-panel rounded-none border-t-0 border-x-0"
-         style={{ borderBottom: "1px solid rgba(0,212,255,0.12)" }}>
+         style={{ borderBottom: "1px solid var(--app-nav-border)" }}>
       <div className="max-w-[1920px] mx-auto px-4 h-14 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
@@ -34,9 +37,9 @@ export default function TopNav() {
           </div>
           <span className="text-base font-bold tracking-wide hidden sm:block">
             <span className="text-cyan-400">TWIN</span>
-            <span className="text-slate-400 ml-1">AI</span>
+            <span className="theme-title ml-1">AI</span>
           </span>
-          <span className="hidden lg:flex items-center text-[10px] text-slate-500 border border-slate-700 rounded px-1.5 py-0.5 ml-1">
+          <span className="hidden lg:flex items-center text-[10px] theme-nav-chip rounded px-1.5 py-0.5 ml-1">
             LIVE
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 ml-1 animate-pulse" />
           </span>
@@ -50,10 +53,10 @@ export default function TopNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 flex items-center gap-1.5
+                className={`theme-nav-link px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 flex items-center gap-1.5
                   ${isActive
-                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                    ? "theme-nav-link-active bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                    : "border border-transparent"
                   }`}
               >
                 <span className="text-sm">{item.icon}</span>
@@ -66,17 +69,27 @@ export default function TopNav() {
         {/* Right side */}
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex items-center gap-2 text-[10px] text-slate-500">
-            <span className="px-2 py-1 rounded bg-space-800 border border-space-700">
+            <span className="px-2 py-1 rounded theme-nav-chip">
               🛰 14 Satellites
             </span>
-            <span className="px-2 py-1 rounded bg-space-800 border border-space-700">
+            <span className="px-2 py-1 rounded theme-nav-chip">
               🤖 23 AI Models
             </span>
           </div>
 
+          <button
+            type="button"
+            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+            onClick={toggleTheme}
+            className="theme-nav-toggle inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-all"
+          >
+            {theme === "dark" ? <SunMedium className="h-3.5 w-3.5" /> : <MoonStar className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">{theme === "dark" ? "Light" : "Dark"}</span>
+          </button>
+
           {/* Mobile toggle */}
           <button
-            className="md:hidden text-slate-400 hover:text-cyan-400 transition-colors"
+            className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-md theme-nav-toggle transition-all"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -91,7 +104,7 @@ export default function TopNav() {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-space-700 bg-space-900/95 backdrop-blur-xl">
+        <div className="md:hidden theme-nav-menu">
           <div className="p-3 grid grid-cols-3 gap-2">
             {NAV_ITEMS.map(item => {
               const isActive = pathname === item.href;
@@ -100,10 +113,10 @@ export default function TopNav() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`px-2 py-3 rounded-lg text-center text-xs font-medium transition-all
+                  className={`theme-nav-link px-2 py-3 rounded-lg text-center text-xs font-medium transition-all
                     ${isActive
-                      ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                      : "text-slate-400 hover:text-slate-200 bg-space-800/50"
+                      ? "theme-nav-link-active bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                      : "border border-transparent"
                     }`}
                 >
                   <div className="text-lg mb-1">{item.icon}</div>

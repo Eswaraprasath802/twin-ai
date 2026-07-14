@@ -70,13 +70,13 @@ export default function ClimatePage() {
     });
 
   return (
-    <div className="min-h-screen bg-space-950 grid-bg">
+    <div className="theme-shell grid-bg">
       <TopNav />
       <div className="pt-16 px-4 pb-8 max-w-[1920px] mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-200">🌡 Climate Monitor</h1>
-            <p className="text-sm text-slate-500">Real-time climate data across all Indian states</p>
+            <h1 className="text-2xl font-bold theme-title">🌡 Climate Monitor</h1>
+            <p className="text-sm theme-subtitle">Real-time climate data across all Indian states</p>
           </div>
           <div className="flex items-center gap-2 mt-3 md:mt-0 flex-wrap">
             {regions.map(r => (

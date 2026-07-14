@@ -45,13 +45,13 @@ export default function GovernmentPage() {
   const waterTrend = createSeries(30, selectedState + 5.5, 40, 90, 0);
 
   return (
-    <div className="min-h-screen bg-space-950 grid-bg">
+    <div className="theme-shell grid-bg">
       <TopNav />
       <div className="pt-16 px-4 pb-8 max-w-[1920px] mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-200">🏛 Government Dashboard</h1>
-            <p className="text-sm text-slate-500">District Collector & Department Intelligence Platform</p>
+            <h1 className="text-2xl font-bold theme-title">🏛 Government Dashboard</h1>
+            <p className="text-sm theme-subtitle">District Collector & Department Intelligence Platform</p>
           </div>
           <div className="flex items-center gap-3 mt-3 md:mt-0">
             <span className="text-xs text-slate-500">Role: <span className="text-cyan-400">District Collector</span></span>

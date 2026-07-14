@@ -5,6 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}TWIN AI{% endblock %} — Digital Twin of India's Climate</title>
     <meta name="description" content="AI-Powered Digital Twin platform for monitoring, predicting and simulating India's climate, agriculture, disaster management and government planning.">
+    <script>
+        (function () {
+            const storageKey = 'twin-ai-theme';
+            const root = document.documentElement;
+            let theme = 'light';
+
+            try {
+                theme = localStorage.getItem(storageKey) || theme;
+            } catch (error) {
+                theme = 'light';
+            }
+
+            if (theme !== 'dark' && theme !== 'light') {
+                theme = 'light';
+            }
+
+            root.dataset.theme = theme;
+            root.style.colorScheme = theme;
+        })();
+    </script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block head %}{% endblock %}
 </head>
@@ -55,6 +75,10 @@
             <div class="nav-status">
                 <span class="nav-badge">🛰 14 Satellites</span>
                 <span class="nav-badge">🤖 23 AI Models</span>
+                <button type="button" class="theme-toggle nav-theme-toggle" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
+                    <span class="theme-toggle-icon" data-theme-icon>🌙</span>
+                    <span data-theme-label>Dark</span>
+                </button>
             </div>
         </div>
     </nav>

@@ -60,12 +60,12 @@ export default function SimulationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-space-950 grid-bg">
+    <div className="theme-shell grid-bg">
       <TopNav />
       <div className="pt-16 px-4 pb-8 max-w-[1920px] mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-200">🔬 Scenario Simulation Engine</h1>
-          <p className="text-sm text-slate-500">Simulate climate scenarios and predict impacts using AI models</p>
+          <h1 className="text-2xl font-bold theme-title">🔬 Scenario Simulation Engine</h1>
+          <p className="text-sm theme-subtitle">Simulate climate scenarios and predict impacts using AI models</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

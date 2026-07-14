@@ -42,13 +42,13 @@ export default function CitizenPage() {
   const state = INDIA_STATES.find(s => s.id === selectedState);
 
   return (
-    <div className="min-h-screen bg-space-950 grid-bg">
+    <div className="theme-shell grid-bg">
       <TopNav />
       <div className="pt-16 px-4 pb-8 max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8 pt-4">
-          <h1 className="text-3xl font-bold text-slate-200 mb-2">👤 Citizen Portal</h1>
-          <p className="text-sm text-slate-500">Your personal climate safety & information hub</p>
+          <h1 className="text-3xl font-bold theme-title mb-2">👤 Citizen Portal</h1>
+          <p className="text-sm theme-subtitle">Your personal climate safety & information hub</p>
           <div className="mt-3">
             <select value={selectedState} onChange={e => setSelectedState(parseInt(e.target.value))}
               className="px-4 py-2 rounded-lg text-sm bg-space-800 border border-space-700 text-slate-300 outline-none">

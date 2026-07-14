@@ -114,7 +114,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#020617] relative overflow-hidden">
+    <div className="theme-shell relative overflow-hidden">
       <style jsx global>{`
         @keyframes float {
           0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
@@ -135,8 +135,9 @@ export default function HomePage() {
           animation: holoShimmer 4s linear infinite;
         }
         .grid-bg {
-          background-image: linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+          background-color: var(--app-bg);
+          background-image: linear-gradient(var(--app-grid-line) 1px, transparent 1px),
+                            linear-gradient(90deg, var(--app-grid-line) 1px, transparent 1px);
           background-size: 60px 60px;
         }
         .glass-card {
@@ -185,12 +186,12 @@ export default function HomePage() {
           <div className={`text-center lg:text-left transition-all duration-1000 delay-200 ${loaded ? "opacity-100" : "opacity-0"}`}>
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-4">
               <span className="holo-text">TWIN</span>
-              <span className="text-slate-300 ml-3">AI</span>
+              <span className="theme-title ml-3">AI</span>
             </h1>
-            <p className="text-lg text-slate-400 max-w-md mb-2">
+            <p className="text-lg theme-subtitle max-w-md mb-2">
               AI-Powered Digital Twin of India&apos;s Climate
             </p>
-            <p className="text-sm text-slate-500 max-w-md mb-8">
+            <p className="text-sm theme-subtitle max-w-md mb-8">
               Monitor, predict, simulate & recommend actions for climate,
               agriculture, disaster management and government planning.
             </p>
@@ -213,7 +214,7 @@ export default function HomePage() {
               ].map((stat, i) => (
                 <div key={i}>
                   <div className="text-2xl font-bold text-[#00d4ff]">{stat.value}</div>
-                  <div className="text-[10px] text-slate-500 uppercase tracking-wider">{stat.label}</div>
+                  <div className="text-[10px] theme-subtitle uppercase tracking-wider">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -268,7 +269,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="mt-8 text-center text-xs text-slate-600">
+        <div className="mt-8 text-center text-xs theme-subtitle">
           <p>TWIN AI — Digital Twin Platform for India&apos;s Climate Intelligence</p>
           <p className="mt-1">Powered by ISRO • IMD • ICAR • Ministry of Agriculture</p>
         </div>

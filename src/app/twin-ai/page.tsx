@@ -104,17 +104,17 @@ export default function TwinAIPage() {
   };
 
   return (
-    <div className="min-h-screen bg-space-950 grid-bg flex flex-col">
+    <div className="theme-shell grid-bg flex flex-col">
       <TopNav />
 
       <div className="flex-1 flex flex-col pt-14 max-w-5xl mx-auto w-full px-4">
         {/* Header */}
         <div className="py-4 flex items-center justify-between shrink-0">
           <div>
-            <h1 className="text-xl font-bold text-slate-200 flex items-center gap-2">
-              🤖 <span className="holo-text">TWIN AI</span> <span className="text-slate-400 text-sm font-normal">Climate Copilot</span>
+            <h1 className="text-xl font-bold theme-title flex items-center gap-2">
+              🤖 <span className="holo-text">TWIN AI</span> <span className="theme-subtitle text-sm font-normal">Climate Copilot</span>
             </h1>
-            <p className="text-[10px] text-slate-500 mt-0.5">
+            <p className="text-[10px] theme-subtitle mt-0.5">
               Powered by LSTM + XGBoost + GPT • Sources: IMD, ISRO, ICAR
             </p>
           </div>

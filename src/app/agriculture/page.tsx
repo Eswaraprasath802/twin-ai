@@ -77,13 +77,13 @@ export default function AgriculturePage() {
   const soilTypes = ["Alluvial", "Black Cotton", "Red", "Laterite", "Desert Sandy", "Mountain", "Peaty"];
 
   return (
-    <div className="min-h-screen bg-space-950 grid-bg">
+    <div className="theme-shell grid-bg">
       <TopNav />
       <div className="pt-16 px-4 pb-8 max-w-[1920px] mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-200">🌾 Smart Agriculture</h1>
-            <p className="text-sm text-slate-500">AI-powered crop advisory and agricultural intelligence</p>
+            <h1 className="text-2xl font-bold theme-title">🌾 Smart Agriculture</h1>
+            <p className="text-sm theme-subtitle">AI-powered crop advisory and agricultural intelligence</p>
           </div>
           <div className="flex items-center gap-3 mt-3 md:mt-0">
             <select value={selectedState} onChange={e => setSelectedState(parseInt(e.target.value))}
