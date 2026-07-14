@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Simulation Engine{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">🔬 Scenario Simulation Engine</h1>
+        <p class="page-subtitle">Simulate climate scenarios and predict impacts using AI models</p>
+    </div>
+
+    <div class="grid" style="grid-template-columns: 1fr 2fr;">
+        <!-- Controls -->
+        <div class="space-y-4">
+            <div class="glass-card p-5">
+                <h2 class="text-sm font-bold mb-3" style="color: #e2e8f0;">Select Scenario</h2>
+                <div class="space-y-2" id="scenarioList">
+                    <button class="scenario-btn active" data-type="rain_increase" data-label="Increase %" data-min="5" data-max="100" data-default="20">
+                        <div class="font-bold">🌧 Rainfall Increase</div>
+                        <div class="text-xs" style="color: #64748b;">Simulate increased rainfall and predict flooding</div>
+                    </button>
+                    <button class="scenario-btn" data-type="temperature_increase" data-label="Increase °C" data-min="0.5" data-max="6" data-default="2">
+                        <div class="font-bold">🌡 Temperature Rise</div>
+                        <div class="text-xs" style="color: #64748b;">Simulate temperature increase and heatwave impacts</div>
+                    </button>
+                    <button class="scenario-btn" data-type="cyclone" data-label="Category" data-min="1" data-max="5" data-default="3">
+                        <div class="font-bold">🌀 Cyclone Simulation</div>
+                        <div class="text-xs" style="color: #64748b;">Simulate cyclone landfall and coastal damage</div>
+                    </button>
+                    <button class="scenario-btn" data-type="flood" data-label="Severity" data-min="1" data-max="5" data-default="3">
+                        <div class="font-bold">🌊 Flood Simulation</div>
+                        <div class="text-xs" style="color: #64748b;">Simulate river flooding and affected areas</div>
+                    </button>
+                    <button class="scenario-btn" data-type="drought" data-label="Severity" data-min="1" data-max="5" data-default="3">
+                        <div class="font-bold">☀️ Drought Simulation</div>
+                        <div class="text-xs" style="color: #64748b;">Simulate drought conditions and crop loss</div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="glass-card p-5">
+                <h2 class="text-sm font-bold mb-3" style="color: #e2e8f0;">Parameters</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs" style="color: #94a3b8;">State</label>
+                        <select id="stateSelect" class="w-full mt-1">
+                            {% for state in states %}
+                            <option value="{{ state.id }}">{{ state.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs" style="color: #94a3b8;"><span id="paramLabel">Increase %</span>: <span id="paramValue" class="text-cyan font-mono">20</span></label>
+                        <input type="range" id="paramSlider" min="5" max="100" value="20" class="w-full mt-1" style="accent-color: var(--cyber-blue);">
+                        <div class="flex justify-between text-xs mt-1" style="color: #475569;">
+                            <span id="paramMin">5</span>
+                            <span id="paramMax">100</span>
+                        </div>
+                    </div>
+                    <button id="runBtn" class="btn-cyber w-full" style="padding: 14px;">▶ Run Simulation</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsPanel">
+            <div class="glass-card p-16 text-center">
+                <div style="font-size: 64px; margin-bottom: 16px;">🔬</div>
+                <h2 class="text-lg font-bold mb-2" style="color: #e2e8f0;">Simulation Engine Ready</h2>
+                <p class="text-sm" style="color: #64748b; max-width: 400px; margin: 0 auto;">
+                    Select a scenario, configure parameters, and run the simulation to predict climate impacts on population, agriculture, and infrastructure.
+                </p>
+                <div class="mt-6 text-xs" style="color: #475569;">
+                    Engine: SimEngine v2.4.0 • Models: LSTM + XGBoost + Random Forest
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .scenario-btn {
+        width: 100%;
+        text-align: left;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        color: #94a3b8;
+        background: rgba(15,23,42,0.3);
+        border: 1px solid var(--space-700);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .scenario-btn:hover { color: #e2e8f0; }
+    .scenario-btn.active {
+        background: rgba(0,212,255,0.1);
+        border-color: rgba(0,212,255,0.3);
+        color: var(--cyber-blue);
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentScenario = {type: 'rain_increase', label: 'Increase %', min: 5, max: 100, default: 20};
+    const slider = document.getElementById('paramSlider');
+    const valueDisplay = document.getElementById('paramValue');
+
+    // Scenario selection
+    document.querySelectorAll('.scenario-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentScenario = {
+                type: btn.dataset.type,
+                label: btn.dataset.label,
+                min: parseFloat(btn.dataset.min),
+                max: parseFloat(btn.dataset.max),
+                default: parseFloat(btn.dataset.default)
+            };
+            document.getElementById('paramLabel').textContent = currentScenario.label;
+            document.getElementById('paramMin').textContent = currentScenario.min;
+            document.getElementById('paramMax').textContent = currentScenario.max;
+            slider.min = currentScenario.min;
+            slider.max = currentScenario.max;
+            slider.step = currentScenario.max <= 6 ? 0.5 : 5;
+            slider.value = currentScenario.default;
+            valueDisplay.textContent = currentScenario.default;
+        });
+    });
+
+    slider.addEventListener('input', () => {
+        valueDisplay.textContent = slider.value;
+    });
+
+    // Run simulation
+    document.getElementById('runBtn').addEventListener('click', () => {
+        const btn = document.getElementById('runBtn');
+        btn.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px;"></span> Computing...';
+        btn.disabled = true;
+
+        fetch('/api/simulation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: currentScenario.type,
+                state_id: parseInt(document.getElementById('stateSelect').value),
+                rain_change: parseFloat(slider.value),
+                temp_change: parseFloat(slider.value)
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            btn.innerHTML = '▶ Run Simulation';
+            btn.disabled = false;
+            renderResults(data);
+        });
+    });
+
+    function renderResults(data) {
+        const r = data.results;
+        document.getElementById('resultsPanel').innerHTML = `
+            <div class="space-y-4 fade-in-up">
+                <div class="glass-card p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h2 class="text-lg font-bold" style="color: #e2e8f0;">Simulation Results</h2>
+                            <p class="text-xs" style="color: #64748b;">${data.state} • ${currentScenario.label}: ${slider.value}</p>
+                        </div>
+                        <span class="alert-badge alert-high">HIGH IMPACT</span>
+                    </div>
+                    <div class="grid grid-3 gap-4">
+                        <div class="p-4 rounded-lg bg-space-800"><div class="flex items-center gap-2 mb-2"><span>🏘</span><span class="text-xs" style="color:#64748b;">Affected Villages</span></div><div class="text-2xl font-bold text-red font-mono">${r.affected_villages.toLocaleString()}</div></div>
+                        <div class="p-4 rounded-lg bg-space-800"><div class="flex items-center gap-2 mb-2"><span>👥</span><span class="text-xs" style="color:#64748b;">Affected Population</span></div><div class="text-2xl font-bold text-orange font-mono">${(r.affected_population/1000000).toFixed(1)}M</div></div>
+                        <div class="p-4 rounded-lg bg-space-800"><div class="flex items-center gap-2 mb-2"><span>🌾</span><span class="text-xs" style="color:#64748b;">Crop Damage</span></div><div class="text-2xl font-bold text-yellow font-mono">${r.crop_damage}%</div></div>
+                        <div class="p-4 rounded-lg bg-space-800"><div class="flex items-center gap-2 mb-2"><span>💰</span><span class="text-xs" style="color:#64748b;">Economic Loss</span></div><div class="text-2xl font-bold font-mono" style="color:#ff3333;">₹${r.economic_loss.toLocaleString()}Cr</div></div>
+                        <div class="p-4 rounded-lg bg-space-800"><div class="flex items-center gap-2 mb-2"><span>🛣</span><span class="text-xs" style="color:#64748b;">Road Closures</span></div><div class="text-2xl font-bold text-orange font-mono">${r.road_closures}</div></div>
+                        <div class="p-4 rounded-lg bg-space-800"><div class="flex items-center gap-2 mb-2"><span>🏥</span><span class="text-xs" style="color:#64748b;">Hospital Impact</span></div><div class="text-2xl font-bold text-cyan font-mono">${r.hospital_impact}</div></div>
+                    </div>
+                </div>
+                <div class="glass-card p-5">
+                    <h3 class="text-sm font-bold mb-3" style="color: #e2e8f0;">Impact Assessment</h3>
+                    <div class="space-y-3">
+                        <div><div class="flex justify-between text-xs mb-1"><span style="color:#94a3b8;">Population Impact</span><span style="color:#64748b;" class="font-mono">${Math.min(100, Math.round(r.affected_population/10000000*100))}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100, r.affected_population/10000000*100)}%; background: linear-gradient(90deg, #ff3333, #ff8800);"></div></div></div>
+                        <div><div class="flex justify-between text-xs mb-1"><span style="color:#94a3b8;">Agricultural Impact</span><span style="color:#64748b;" class="font-mono">${r.crop_damage}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${r.crop_damage}%; background: linear-gradient(90deg, #ffd700, #ff8800);"></div></div></div>
+                        <div><div class="flex justify-between text-xs mb-1"><span style="color:#94a3b8;">Infrastructure Impact</span><span style="color:#64748b;" class="font-mono">${Math.min(100, r.road_closures)}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100, r.road_closures)}%; background: linear-gradient(90deg, #ff8800, #ff3333);"></div></div></div>
+                    </div>
+                </div>
+                <div class="glass-card p-5">
+                    <div class="flex items-center gap-2 mb-3"><span>🤖</span><h3 class="text-sm font-bold text-green">AI Recommendations</h3></div>
+                    <div class="space-y-2">
+                        ${r.recommendations.map((rec, i) => `
+                            <div class="flex items-start gap-3 p-3 rounded" style="background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.1);">
+                                <div style="width: 20px; height: 20px; border-radius: 50%; background: rgba(0,255,136,0.2); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--cyber-green); font-weight: bold;">${i+1}</div>
+                                <span class="text-xs" style="color: #e2e8f0;">${rec}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+</script>
+{% endblock %}

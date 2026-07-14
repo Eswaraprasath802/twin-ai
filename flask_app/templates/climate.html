@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Climate Monitor{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header flex justify-between items-center">
+        <div>
+            <h1 class="page-title">🌡 Climate Monitor</h1>
+            <p class="page-subtitle">Real-time climate data across all Indian states</p>
+        </div>
+        <div class="tabs" id="regionTabs">
+            <button class="tab active" data-region="all">All India</button>
+            <button class="tab" data-region="North">North</button>
+            <button class="tab" data-region="South">South</button>
+            <button class="tab" data-region="East">East</button>
+            <button class="tab" data-region="West">West</button>
+            <button class="tab" data-region="Central">Central</button>
+            <button class="tab" data-region="Northeast">Northeast</button>
+        </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns: 2fr 1fr;">
+        <!-- States Grid -->
+        <div class="grid grid-3" id="statesGrid">
+            <!-- Loaded via JS -->
+        </div>
+
+        <!-- Detail Panel -->
+        <div id="detailPanel">
+            <div class="glass-card p-8 text-center">
+                <div style="font-size: 48px; margin-bottom: 16px;">🌡</div>
+                <p class="text-sm" style="color: #94a3b8;">Select a state to view detailed climate data</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const states = {{ states | tojson }};
+    let climateData = [];
+    let selectedState = null;
+    let currentRegion = 'all';
+
+    const conditionIcons = {
+        'Sunny': '☀️', 'Partly Cloudy': '⛅', 'Cloudy': '☁️', 'Overcast': '🌥',
+        'Light Rain': '🌦', 'Heavy Rain': '🌧', 'Thunderstorm': '⛈', 'Haze': '🌫',
+        'Fog': '🌁', 'Clear': '🌙'
+    };
+
+    function aqiLabel(aqi) {
+        if (aqi <= 50) return { label: 'Good', cls: 'text-green' };
+        if (aqi <= 100) return { label: 'Moderate', cls: 'text-yellow' };
+        if (aqi <= 200) return { label: 'Poor', cls: 'text-orange' };
+        return { label: 'Very Poor', cls: 'text-red' };
+    }
+
+    function renderStates() {
+        const filtered = currentRegion === 'all' ? climateData : climateData.filter(d => d.state.region_type === currentRegion);
+        
+        document.getElementById('statesGrid').innerHTML = filtered.map(entry => `
+            <div class="glass-card p-4 cursor-pointer ${selectedState?.state.id === entry.state.id ? 'glow-blue' : ''}"
+                 onclick="selectState(${entry.state.id})">
+                <div class="flex justify-between items-center mb-3">
+                    <div>
+                        <div class="text-sm font-bold" style="color: #e2e8f0;">${entry.state.name}</div>
+                        <div class="text-xs" style="color: #64748b;">${entry.state.code}</div>
+                    </div>
+                    <div style="font-size: 24px;">${conditionIcons[entry.climate.condition] || '🌤'}</div>
+                </div>
+                <div class="grid grid-3 gap-2 text-center">
+                    <div>
+                        <div class="text-lg font-bold text-orange font-mono">${entry.climate.temperature}°</div>
+                        <div class="text-xs" style="color: #475569;">TEMP</div>
+                    </div>
+                    <div>
+                        <div class="text-lg font-bold text-cyan font-mono">${entry.climate.humidity}%</div>
+                        <div class="text-xs" style="color: #475569;">HUMID</div>
+                    </div>
+                    <div>
+                        <div class="text-lg font-bold" style="color: #3b82f6;">${entry.climate.rainfall}</div>
+                        <div class="text-xs" style="color: #475569;">RAIN mm</div>
+                    </div>
+                </div>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs ${aqiLabel(entry.climate.aqi).cls}">AQI ${entry.climate.aqi} • ${aqiLabel(entry.climate.aqi).label}</span>
+                    <span class="text-xs" style="color: #475569;">${entry.climate.condition}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function selectState(stateId) {
+        selectedState = climateData.find(d => d.state.id === stateId);
+        if (!selectedState) return;
+        
+        const s = selectedState.state;
+        const c = selectedState.climate;
+        const aqi = aqiLabel(c.aqi);
+        
+        document.getElementById('detailPanel').innerHTML = `
+            <div class="glass-card p-5 mb-4">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 class="text-lg font-bold" style="color: #e2e8f0;">${s.name}</h2>
+                        <p class="text-xs" style="color: #64748b;">${c.condition}</p>
+                    </div>
+                    <span style="font-size: 40px;">${conditionIcons[c.condition] || '🌤'}</span>
+                </div>
+                <div class="text-5xl font-bold text-orange font-mono mb-4">
+                    ${c.temperature}<span class="text-xl">°C</span>
+                </div>
+                <div class="grid grid-2 gap-3">
+                    <div class="p-2 rounded bg-space-800"><div class="text-xs" style="color: #64748b;">💧 Humidity</div><div class="text-cyan font-bold">${c.humidity}%</div></div>
+                    <div class="p-2 rounded bg-space-800"><div class="text-xs" style="color: #64748b;">🌧 Rainfall</div><div style="color: #3b82f6;" class="font-bold">${c.rainfall} mm</div></div>
+                    <div class="p-2 rounded bg-space-800"><div class="text-xs" style="color: #64748b;">💨 Wind</div><div class="text-green font-bold">${c.wind_speed} km/h ${c.wind_direction}</div></div>
+                    <div class="p-2 rounded bg-space-800"><div class="text-xs" style="color: #64748b;">📊 Pressure</div><div class="text-purple font-bold">${c.pressure} hPa</div></div>
+                    <div class="p-2 rounded bg-space-800"><div class="text-xs" style="color: #64748b;">🌫 AQI</div><div class="${aqi.cls} font-bold">${c.aqi}</div></div>
+                    <div class="p-2 rounded bg-space-800"><div class="text-xs" style="color: #64748b;">☀️ UV Index</div><div class="text-orange font-bold">${c.uv_index}</div></div>
+                    <div class="p-2 rounded bg-space-800"><div class="text-xs" style="color: #64748b;">👁 Visibility</div><div style="color: #e2e8f0;" class="font-bold">${c.visibility} km</div></div>
+                    <div class="p-2 rounded bg-space-800"><div class="text-xs" style="color: #64748b;">☁️ Cloud Cover</div><div style="color: #94a3b8;" class="font-bold">${c.cloud_cover}%</div></div>
+                </div>
+            </div>
+            <div class="glass-card p-5 ai-insight">
+                <div class="ai-header"><span>🤖</span><span class="ai-label">AI ANALYSIS</span></div>
+                <p class="ai-content">
+                    ${c.temperature > 38 
+                        ? `⚠️ Heatwave conditions detected in ${s.name}. Temperature ${c.temperature}°C is significantly above normal. Advisory: Avoid outdoor work 12PM-4PM, increase water intake, and check on vulnerable populations.`
+                        : c.rainfall > 30
+                            ? `🌧 Above-normal rainfall recorded in ${s.name}. ${c.rainfall}mm rainfall may cause waterlogging in low-lying areas. Agriculture advisory: Ensure proper drainage in crop fields.`
+                            : `Current conditions in ${s.name} are within normal parameters. Temperature ${c.temperature}°C with ${c.humidity}% humidity. No immediate advisories required.`
+                    }
+                </p>
+            </div>
+        `;
+        renderStates();
+    }
+
+    // Region tabs
+    document.querySelectorAll('#regionTabs .tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('#regionTabs .tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentRegion = tab.dataset.region;
+            renderStates();
+        });
+    });
+
+    // Load data
+    fetch('/api/climate')
+        .then(r => r.json())
+        .then(data => {
+            climateData = data.data;
+            renderStates();
+        });
+</script>
+{% endblock %}

@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}Smart Agriculture{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header flex justify-between items-center">
+        <div>
+            <h1 class="page-title">🌾 Smart Agriculture</h1>
+            <p class="page-subtitle">AI-powered crop advisory and agricultural intelligence</p>
+        </div>
+        <select id="stateSelect" class="btn-sm" style="background: var(--space-800); border: 1px solid var(--space-700); color: #e2e8f0;">
+            {% for state in states %}
+            <option value="{{ state.id }}">{{ state.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" data-tab="crops">🌾 Crops Database</button>
+        <button class="tab" data-tab="recommend">🤖 AI Recommendations</button>
+        <button class="tab" data-tab="schemes">🏛 Government Schemes</button>
+        <button class="tab" data-tab="calendar">📅 Crop Calendar</button>
+    </div>
+
+    <!-- Crops Tab -->
+    <div id="cropsTab">
+        <div class="grid grid-4" id="cropsGrid">
+            {% for crop in crops %}
+            <div class="glass-card p-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-bold" style="color: #e2e8f0;">{{ crop.name }}</h3>
+                    <span class="text-xs px-2 py-1 rounded-full {% if crop.season == 'Kharif' %}text-green{% elif crop.season == 'Rabi' %}text-cyan{% else %}text-purple{% endif %}"
+                          style="background: {% if crop.season == 'Kharif' %}rgba(0,255,136,0.1){% elif crop.season == 'Rabi' %}rgba(0,212,255,0.1){% else %}rgba(139,92,246,0.1){% endif %};">
+                        {{ crop.season }}
+                    </span>
+                </div>
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between"><span style="color: #94a3b8;">Category</span><span style="color: #e2e8f0;">{{ crop.category }}</span></div>
+                    <div class="flex justify-between"><span style="color: #94a3b8;">Sowing</span><span class="text-green">{{ crop.sowing_month }}</span></div>
+                    <div class="flex justify-between"><span style="color: #94a3b8;">Harvest</span><span class="text-orange">{{ crop.harvest_month }}</span></div>
+                    <div class="flex justify-between"><span style="color: #94a3b8;">Water Need</span><span class="{% if crop.water_requirement == 'High' %}text-red{% elif crop.water_requirement == 'Medium' %}text-yellow{% else %}text-green{% endif %}">{{ crop.water_requirement }}</span></div>
+                    <div class="flex justify-between"><span style="color: #94a3b8;">Yield</span><span class="text-cyan font-mono">{{ crop.yield_per_hectare }} ton/ha</span></div>
+                    {% if crop.msp > 0 %}
+                    <div class="flex justify-between pt-2" style="border-top: 1px solid #1e293b;"><span style="color: #94a3b8;">MSP</span><span class="text-yellow font-bold font-mono">₹{{ crop.msp }}/q</span></div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recommendations Tab -->
+    <div id="recommendTab" class="hidden">
+        <div class="glass-card p-4 mb-4 flex items-center gap-3" style="flex-wrap: wrap;">
+            <span class="text-xs" style="color: #94a3b8;">Soil Type:</span>
+            <button class="tab active soil-tab" data-soil="Alluvial">Alluvial</button>
+            <button class="tab soil-tab" data-soil="Black Cotton">Black Cotton</button>
+            <button class="tab soil-tab" data-soil="Red">Red</button>
+            <button class="tab soil-tab" data-soil="Laterite">Laterite</button>
+            <button class="tab soil-tab" data-soil="Desert Sandy">Desert Sandy</button>
+        </div>
+        <div class="glass-card p-5 mb-4 ai-insight">
+            <div class="ai-header"><span>🤖</span><span class="ai-label" style="color: var(--cyber-green);">AI CROP RECOMMENDATION ENGINE</span></div>
+            <p class="ai-content">Analysis based on selected soil type, current climate conditions, market demand forecasts, and historical yield data. Powered by XGBoost + Random Forest ensemble.</p>
+        </div>
+        <div id="recommendationsList" class="space-y-3"></div>
+    </div>
+
+    <!-- Schemes Tab -->
+    <div id="schemesTab" class="hidden">
+        <div class="grid grid-3" id="schemesGrid"></div>
+    </div>
+
+    <!-- Calendar Tab -->
+    <div id="calendarTab" class="hidden">
+        <div class="glass-card p-5 overflow-hidden">
+            <h2 class="text-sm font-bold mb-4" style="color: #e2e8f0;">📅 Annual Crop Calendar</h2>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; min-width: 700px; font-size: 11px;">
+                    <thead>
+                        <tr style="color: #64748b;">
+                            <th style="text-align: left; padding: 8px;">Crop</th>
+                            <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th>
+                            <th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendarBody"></tbody>
+                </table>
+            </div>
+            <div class="flex gap-4 mt-4 text-xs" style="color: #64748b;">
+                <div class="flex items-center gap-1"><div style="width: 12px; height: 12px; border-radius: 2px; background: rgba(0,255,136,0.4);"></div> Sowing</div>
+                <div class="flex items-center gap-1"><div style="width: 12px; height: 12px; border-radius: 2px; background: rgba(0,212,255,0.15);"></div> Growing</div>
+                <div class="flex items-center gap-1"><div style="width: 12px; height: 12px; border-radius: 2px; background: rgba(255,136,0,0.4);"></div> Harvest</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const crops = {{ crops | tojson }};
+    let selectedSoil = 'Alluvial';
+
+    // Tab switching
+    document.querySelectorAll('.tabs .tab').forEach(tab => {
+        if (tab.dataset.tab) {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.querySelectorAll('[id$="Tab"]').forEach(p => p.classList.add('hidden'));
+                document.getElementById(tab.dataset.tab + 'Tab').classList.remove('hidden');
+                
+                if (tab.dataset.tab === 'recommend') loadRecommendations();
+                if (tab.dataset.tab === 'schemes') loadSchemes();
+                if (tab.dataset.tab === 'calendar') loadCalendar();
+            });
+        }
+    });
+
+    // Soil type selection
+    document.querySelectorAll('.soil-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.soil-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            selectedSoil = tab.dataset.soil;
+            loadRecommendations();
+        });
+    });
+
+    function loadRecommendations() {
+        const stateId = document.getElementById('stateSelect').value;
+        fetch(`/api/agriculture?section=recommendation&state_id=${stateId}&soil_type=${selectedSoil}`)
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('recommendationsList').innerHTML = data.recommendations.map((rec, i) => `
+                    <div class="glass-card p-4 flex items-center gap-4">
+                        <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, rgba(0,255,136,0.2), rgba(0,255,136,0.05)); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; color: var(--cyber-green);">
+                            #${i + 1}
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="text-sm font-bold" style="color: #e2e8f0;">${rec.crop}</div>
+                            <div class="text-xs" style="color: #64748b;">${rec.season} • ${rec.reason}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-bold text-green">${rec.suitability}%</div>
+                            <div class="text-xs" style="color: #475569;">SUITABILITY</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-bold text-cyan font-mono">${rec.expected_yield}</div>
+                            <div class="text-xs" style="color: #475569;">YIELD ton/ha</div>
+                        </div>
+                        ${rec.msp > 0 ? `
+                        <div class="text-center">
+                            <div class="text-lg font-bold text-yellow font-mono">₹${rec.msp.toLocaleString()}</div>
+                            <div class="text-xs" style="color: #475569;">MSP/quintal</div>
+                        </div>` : ''}
+                        <div class="progress-bar" style="width: 80px;">
+                            <div class="progress-fill" style="width: ${rec.suitability}%;"></div>
+                        </div>
+                    </div>
+                `).join('');
+            });
+    }
+
+    function loadSchemes() {
+        fetch('/api/agriculture?section=schemes')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('schemesGrid').innerHTML = data.schemes.map(s => `
+                    <div class="glass-card p-5">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span style="font-size: 20px;">🏛</span>
+                            <div>
+                                <h3 class="text-sm font-bold" style="color: #e2e8f0;">${s.name}</h3>
+                                <span class="text-xs text-cyan">${s.ministry}</span>
+                            </div>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded-full text-purple mb-3" style="background: rgba(139,92,246,0.1); display: inline-block;">${s.category}</span>
+                        <p class="text-xs mb-3" style="color: #94a3b8; line-height: 1.5;">${s.description}</p>
+                        <div class="space-y-2 text-xs">
+                            <div><span style="color: #64748b;">Eligibility: </span><span style="color: #e2e8f0;">${s.eligibility}</span></div>
+                            <div><span style="color: #64748b;">Benefits: </span><span class="text-green">${s.benefits}</span></div>
+                        </div>
+                    </div>
+                `).join('');
+            });
+    }
+
+    function loadCalendar() {
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const monthMap = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Nov:11,Dec:11,January:0,February:1,March:2,April:3,June:5,July:6,August:7,September:8,October:9,November:10,December:11};
+        
+        document.getElementById('calendarBody').innerHTML = crops.slice(0, 10).map(crop => {
+            const sowIdx = monthMap[crop.sowing_month.split(' ')[0]] ?? -1;
+            const harIdx = monthMap[crop.harvest_month.split(' ')[0]] ?? -1;
+            
+            return `
+                <tr>
+                    <td style="padding: 8px; color: #e2e8f0; font-weight: 500;">${crop.name}</td>
+                    ${months.map((_, mi) => {
+                        const inRange = sowIdx >= 0 && harIdx >= 0 && (sowIdx <= harIdx ? mi >= sowIdx && mi <= harIdx : mi >= sowIdx || mi <= harIdx);
+                        const isSow = mi === sowIdx;
+                        const isHar = mi === harIdx;
+                        let bg = 'background: rgba(15,23,42,0.3);';
+                        if (isSow) bg = 'background: rgba(0,255,136,0.4); border: 1px solid rgba(0,255,136,0.5);';
+                        else if (isHar) bg = 'background: rgba(255,136,0,0.4); border: 1px solid rgba(255,136,0,0.5);';
+                        else if (inRange) bg = 'background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.1);';
+                        return `<td style="padding: 4px;"><div style="${bg} height: 20px; border-radius: 3px;"></div></td>`;
+                    }).join('')}
+                </tr>
+            `;
+        }).join('');
+    }
+</script>
+{% endblock %}

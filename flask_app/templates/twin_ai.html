@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Twin AI Chat{% endblock %}
+
+{% block content %}
+<div class="page-container" style="max-width: 900px; margin: 0 auto;">
+    <div class="page-header flex justify-between items-center">
+        <div>
+            <h1 class="page-title flex items-center gap-2">
+                🤖 <span class="holo-text">TWIN AI</span> <span class="text-sm font-normal" style="color: #94a3b8;">Climate Copilot</span>
+            </h1>
+            <p class="text-xs mt-1" style="color: #64748b;">Powered by LSTM + XGBoost + GPT • Sources: IMD, ISRO, ICAR</p>
+        </div>
+        <select id="langSelect" style="padding: 8px 12px; border-radius: 6px; background: var(--space-800); border: 1px solid var(--space-700); color: #e2e8f0; font-size: 12px;">
+            <option value="en">English</option>
+            <option value="hi">हिन्दी</option>
+            <option value="ta">தமிழ்</option>
+            <option value="te">తెలుగు</option>
+            <option value="kn">ಕನ್ನಡ</option>
+            <option value="ml">മലയാളം</option>
+            <option value="mr">मराठी</option>
+            <option value="bn">বাংলা</option>
+        </select>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-message assistant">
+                <div class="chat-bubble">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span>🤖</span>
+                        <span class="text-xs" style="color: #64748b;">TWIN AI</span>
+                    </div>
+                    <div>
+                        <p><strong style="color: var(--cyber-blue);">Welcome to TWIN AI — Your Climate Intelligence Copilot</strong></p>
+                        <p style="margin-top: 8px;">I can help you with:</p>
+                        <p style="margin-top: 4px;">🌤️ Weather forecasts & predictions<br>
+                        🌾 Crop recommendations & agriculture advisory<br>
+                        🌊 Disaster risk assessment & alerts<br>
+                        📊 Climate data analysis<br>
+                        🏛 Government schemes & policies</p>
+                        <p style="margin-top: 8px;">Ask me anything about India's climate, agriculture, or disaster management!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="suggestions" class="mb-3">
+            <div class="text-xs mb-2" style="color: #64748b;">Try asking:</div>
+            <div class="flex gap-2" style="flex-wrap: wrap;">
+                <button class="suggestion-btn" onclick="sendSuggestion(this)">Will it rain tomorrow?</button>
+                <button class="suggestion-btn" onclick="sendSuggestion(this)">Can I grow cotton here?</button>
+                <button class="suggestion-btn" onclick="sendSuggestion(this)">Flood probability?</button>
+                <button class="suggestion-btn" onclick="sendSuggestion(this)">What crop should I grow?</button>
+                <button class="suggestion-btn" onclick="sendSuggestion(this)">What fertilizer should I use?</button>
+                <button class="suggestion-btn" onclick="sendSuggestion(this)">Government schemes for farmers</button>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <div class="chat-input-wrapper">
+                <input type="text" id="chatInput" class="chat-input" placeholder="Ask TWIN AI about climate, crops, disasters...">
+                <button id="sendBtn" class="btn-cyber" onclick="sendMessage()">Send ↗</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .suggestion-btn {
+        padding: 6px 14px;
+        border-radius: 9999px;
+        font-size: 12px;
+        color: #94a3b8;
+        background: rgba(15,23,42,0.5);
+        border: 1px solid var(--space-700);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .suggestion-btn:hover {
+        border-color: rgba(0,212,255,0.3);
+        color: var(--cyber-blue);
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const suggestions = document.getElementById('suggestions');
+    let messageCount = 1;
+
+    chatInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') sendMessage();
+    });
+
+    function sendSuggestion(btn) {
+        chatInput.value = btn.textContent;
+        sendMessage();
+    }
+
+    function sendMessage() {
+        const msg = chatInput.value.trim();
+        if (!msg) return;
+
+        // Hide suggestions
+        suggestions.classList.add('hidden');
+
+        // Add user message
+        addMessage('user', msg);
+        chatInput.value = '';
+
+        // Add loading
+        const loadingId = 'loading-' + Date.now();
+        chatMessages.innerHTML += `
+            <div class="chat-message assistant" id="${loadingId}">
+                <div class="chat-bubble">
+                    <div class="flex items-center gap-2">
+                        <span style="animation: pulse 1s infinite;">🤖</span>
+                        <div class="flex gap-1">
+                            <div style="width:8px;height:8px;border-radius:50%;background:var(--cyber-blue);animation:bounce 1s infinite;"></div>
+                            <div style="width:8px;height:8px;border-radius:50%;background:var(--cyber-blue);animation:bounce 1s infinite 0.15s;"></div>
+                            <div style="width:8px;height:8px;border-radius:50%;background:var(--cyber-blue);animation:bounce 1s infinite 0.3s;"></div>
+                        </div>
+                        <span class="text-xs" style="color: #64748b;">Analyzing...</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        scrollToBottom();
+
+        // Call API
+        fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg, language: document.getElementById('langSelect').value })
+        })
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById(loadingId).remove();
+            addMessage('assistant', data.response);
+        })
+        .catch(() => {
+            document.getElementById(loadingId).remove();
+            addMessage('assistant', 'I apologize, I encountered an error. Please try again.');
+        });
+    }
+
+    function addMessage(role, content) {
+        const time = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+        const formatted = content.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--cyber-blue);">$1</strong>').replace(/\n/g, '<br>');
+        
+        chatMessages.innerHTML += `
+            <div class="chat-message ${role}">
+                <div class="chat-bubble">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span>${role === 'user' ? '👤' : '🤖'}</span>
+                        <span class="text-xs" style="color: #64748b;">${role === 'user' ? 'You' : 'TWIN AI'} • ${time}</span>
+                    </div>
+                    <div>${formatted}</div>
+                </div>
+            </div>
+        `;
+        scrollToBottom();
+        messageCount++;
+    }
+
+    function scrollToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+</script>
+<style>
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+</style>
+{% endblock %}

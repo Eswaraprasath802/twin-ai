@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TWIN AI{% endblock %} — Digital Twin of India's Climate</title>
+    <meta name="description" content="AI-Powered Digital Twin platform for monitoring, predicting and simulating India's climate, agriculture, disaster management and government planning.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body class="grid-bg">
+    <!-- Navigation -->
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <div class="nav-logo-icon">T</div>
+                <div class="nav-logo-text">
+                    <span>TWIN</span><span>AI</span>
+                </div>
+                <div class="nav-badge live-indicator">
+                    <span class="live-dot"></span> LIVE
+                </div>
+            </a>
+            
+            <div class="nav-links">
+                <a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}">
+                    <span>◆</span> Dashboard
+                </a>
+                <a href="/climate" class="nav-link {% if request.path == '/climate' %}active{% endif %}">
+                    <span>🌡</span> Climate
+                </a>
+                <a href="/agriculture" class="nav-link {% if request.path == '/agriculture' %}active{% endif %}">
+                    <span>🌾</span> Agriculture
+                </a>
+                <a href="/disaster" class="nav-link {% if request.path == '/disaster' %}active{% endif %}">
+                    <span>⚡</span> Disaster
+                </a>
+                <a href="/government" class="nav-link {% if request.path == '/government' %}active{% endif %}">
+                    <span>🏛</span> Government
+                </a>
+                <a href="/analytics" class="nav-link {% if request.path == '/analytics' %}active{% endif %}">
+                    <span>📊</span> Analytics
+                </a>
+                <a href="/twin-ai" class="nav-link {% if request.path == '/twin-ai' %}active{% endif %}">
+                    <span>🤖</span> Twin AI
+                </a>
+                <a href="/simulation" class="nav-link {% if request.path == '/simulation' %}active{% endif %}">
+                    <span>🔬</span> Simulation
+                </a>
+                <a href="/citizen" class="nav-link {% if request.path == '/citizen' %}active{% endif %}">
+                    <span>👤</span> Citizen
+                </a>
+            </div>
+            
+            <div class="nav-status">
+                <span class="nav-badge">🛰 14 Satellites</span>
+                <span class="nav-badge">🤖 23 AI Models</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

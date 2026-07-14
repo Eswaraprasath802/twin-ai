@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Disaster Management{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header flex justify-between items-center">
+        <div>
+            <h1 class="page-title">⚡ Disaster Management Center</h1>
+            <p class="page-subtitle">Real-time disaster monitoring, alerts & AI recommendations</p>
+        </div>
+        <div class="tabs" id="severityTabs">
+            <button class="tab active" data-severity="all">All</button>
+            <button class="tab" data-severity="critical">Critical</button>
+            <button class="tab" data-severity="high">High</button>
+            <button class="tab" data-severity="medium">Medium</button>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-4 mb-4" id="statsGrid"></div>
+
+    <div class="grid" style="grid-template-columns: 1fr 2fr;">
+        <!-- Alert List -->
+        <div class="space-y-3" id="alertsList"></div>
+
+        <!-- Detail Panel -->
+        <div id="detailPanel">
+            <div class="glass-card p-8 text-center">
+                <div style="font-size: 48px; margin-bottom: 16px;">⚡</div>
+                <p class="text-sm" style="color: #94a3b8;">Select an alert to view details and recommendations</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let alerts = [];
+    let selectedAlert = null;
+    let currentSeverity = 'all';
+
+    const typeIcons = {cyclone:'🌀',flood:'🌊',drought:'☀️',heatwave:'🔥',heavy_rain:'🌧',forest_fire:'🔥',earthquake:'📳',thunderstorm:'⛈'};
+
+    function renderStats() {
+        document.getElementById('statsGrid').innerHTML = `
+            <div class="glass-card p-3"><div class="flex items-center gap-2 mb-1"><span>⚠️</span><span class="text-xs" style="color:#64748b;">Active Alerts</span></div><div class="text-xl font-bold text-red font-mono">${alerts.length}</div></div>
+            <div class="glass-card p-3"><div class="flex items-center gap-2 mb-1"><span>🔴</span><span class="text-xs" style="color:#64748b;">Critical</span></div><div class="text-xl font-bold font-mono" style="color:#ff3333;">${alerts.filter(a=>a.severity==='critical').length}</div></div>
+            <div class="glass-card p-3"><div class="flex items-center gap-2 mb-1"><span>🗺</span><span class="text-xs" style="color:#64748b;">States Affected</span></div><div class="text-xl font-bold text-cyan font-mono">${new Set(alerts.map(a=>a.state)).size}</div></div>
+            <div class="glass-card p-3"><div class="flex items-center gap-2 mb-1"><span>👥</span><span class="text-xs" style="color:#64748b;">Population at Risk</span></div><div class="text-xl font-bold text-yellow font-mono">${Math.round(alerts.reduce((s,a)=>s+a.affected_population,0)/1000000)}M</div></div>
+        `;
+    }
+
+    function renderAlerts() {
+        const filtered = currentSeverity === 'all' ? alerts : alerts.filter(a => a.severity === currentSeverity);
+        
+        document.getElementById('alertsList').innerHTML = filtered.map(alert => `
+            <div class="glass-card p-4 cursor-pointer ${selectedAlert?.id === alert.id ? 'glow-blue' : ''}" onclick="selectAlert(${alert.id})">
+                <div class="flex items-start gap-3">
+                    <span style="font-size: 24px;">${typeIcons[alert.type] || '⚠️'}</span>
+                    <div style="flex: 1; min-width: 0;">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-xs font-bold truncate" style="color: #e2e8f0;">${alert.title}</span>
+                            <span class="alert-badge alert-${alert.severity}">${alert.severity}</span>
+                        </div>
+                        <div class="text-xs" style="color: #64748b;">📍 ${alert.state}</div>
+                        <div class="text-xs mt-1" style="color: #475569;">👥 ${(alert.affected_population/1000000).toFixed(1)}M affected</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function selectAlert(id) {
+        selectedAlert = alerts.find(a => a.id === id);
+        if (!selectedAlert) return;
+        
+        const a = selectedAlert;
+        document.getElementById('detailPanel').innerHTML = `
+            <div class="glass-card p-6 mb-4" style="border-left: 4px solid ${a.severity === 'critical' ? '#ff3333' : '#ff8800'};">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center gap-3">
+                        <span style="font-size: 40px;">${typeIcons[a.type] || '⚠️'}</span>
+                        <div>
+                            <h2 class="text-lg font-bold" style="color: #e2e8f0;">${a.title}</h2>
+                            <p class="text-xs" style="color: #64748b;">📍 ${a.state} • ${new Date(a.created_at).toLocaleString()}</p>
+                        </div>
+                    </div>
+                    <span class="alert-badge alert-${a.severity}" style="font-size: 11px; padding: 4px 12px;">${a.severity.toUpperCase()}</span>
+                </div>
+                <p class="text-sm mb-4" style="color: #94a3b8; line-height: 1.6;">${a.description}</p>
+                <div class="grid grid-2 gap-3 mb-4">
+                    <div class="p-3 rounded bg-space-800"><div class="text-xs" style="color: #64748b;">Affected Population</div><div class="text-xl font-bold text-red font-mono">${(a.affected_population/1000000).toFixed(1)}M</div></div>
+                    <div class="p-3 rounded bg-space-800"><div class="text-xs" style="color: #64748b;">Alert Status</div><div class="text-xl font-bold text-orange">ACTIVE</div></div>
+                </div>
+            </div>
+            <div class="glass-card p-6 mb-4">
+                <div class="flex items-center gap-2 mb-4"><span style="font-size: 20px;">🤖</span><h3 class="text-sm font-bold text-green">AI Smart Recommendations</h3></div>
+                <div class="space-y-2">
+                    ${a.recommendations.map((rec, i) => `
+                        <div class="flex items-start gap-3 p-3 rounded" style="background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.1);">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(0,255,136,0.2); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--cyber-green); font-weight: bold;">${i+1}</div>
+                            <span class="text-xs" style="color: #e2e8f0;">${rec}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            <div class="glass-card p-5">
+                <h3 class="text-sm font-bold mb-3" style="color: #e2e8f0;">📞 Emergency Contacts</h3>
+                <div class="grid grid-4 gap-2 text-xs">
+                    <div class="p-2 rounded bg-space-800 text-center"><div style="color:#64748b;">NDRF</div><div class="text-cyan font-bold font-mono">011-26701700</div></div>
+                    <div class="p-2 rounded bg-space-800 text-center"><div style="color:#64748b;">Helpline</div><div class="text-cyan font-bold font-mono">1078</div></div>
+                    <div class="p-2 rounded bg-space-800 text-center"><div style="color:#64748b;">Police</div><div class="text-cyan font-bold font-mono">100</div></div>
+                    <div class="p-2 rounded bg-space-800 text-center"><div style="color:#64748b;">Ambulance</div><div class="text-cyan font-bold font-mono">108</div></div>
+                </div>
+            </div>
+        `;
+        renderAlerts();
+    }
+
+    // Severity tabs
+    document.querySelectorAll('#severityTabs .tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('#severityTabs .tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentSeverity = tab.dataset.severity;
+            renderAlerts();
+        });
+    });
+
+    // Load alerts
+    fetch('/api/alerts')
+        .then(r => r.json())
+        .then(data => {
+            alerts = data.alerts;
+            renderStats();
+            renderAlerts();
+            if (alerts.length > 0) selectAlert(alerts[0].id);
+        });
+</script>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Government Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header flex justify-between items-center">
+        <div>
+            <h1 class="page-title">🏛 Government Dashboard</h1>
+            <p class="page-subtitle">District Collector & Department Intelligence Platform</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-xs" style="color: #64748b;">Role: <span class="text-cyan">District Collector</span></span>
+            <select id="stateSelect">
+                {% for state in states %}
+                <option value="{{ state.id }}">{{ state.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" data-tab="overview">📊 Overview</button>
+        <button class="tab" data-tab="agriculture">🌾 Agriculture</button>
+        <button class="tab" data-tab="water">💧 Water Resources</button>
+        <button class="tab" data-tab="disaster">⚡ Disaster Mgmt</button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div id="overviewTab">
+        <div class="grid grid-6 mb-4">
+            <div class="glass-card p-4"><div class="flex items-center gap-2 mb-2"><span>🌡</span><span class="text-xs" style="color:#64748b;">Climate Score</span></div><div class="text-xl font-bold text-cyan font-mono">78/100</div></div>
+            <div class="glass-card p-4"><div class="flex items-center gap-2 mb-2"><span>⚡</span><span class="text-xs" style="color:#64748b;">Risk Level</span></div><div class="text-xl font-bold text-yellow">Moderate</div></div>
+            <div class="glass-card p-4"><div class="flex items-center gap-2 mb-2"><span>🌾</span><span class="text-xs" style="color:#64748b;">Crop Health</span></div><div class="text-xl font-bold text-green">Good</div></div>
+            <div class="glass-card p-4"><div class="flex items-center gap-2 mb-2"><span>💧</span><span class="text-xs" style="color:#64748b;">Water Level</span></div><div class="text-xl font-bold" style="color:#3b82f6;">72%</div></div>
+            <div class="glass-card p-4"><div class="flex items-center gap-2 mb-2"><span>🏥</span><span class="text-xs" style="color:#64748b;">Health Index</span></div><div class="text-xl font-bold text-purple font-mono">78/100</div></div>
+            <div class="glass-card p-4"><div class="flex items-center gap-2 mb-2"><span>📊</span><span class="text-xs" style="color:#64748b;">AI Predictions</span></div><div class="text-xl font-bold text-orange font-mono">847</div></div>
+        </div>
+
+        <div class="grid grid-2 gap-4">
+            <div class="glass-card p-5">
+                <h2 class="text-sm font-bold mb-4" style="color: #e2e8f0;">📍 State Overview</h2>
+                <div class="grid grid-2 gap-3" id="stateInfo"></div>
+            </div>
+            <div class="glass-card p-5 ai-insight">
+                <div class="ai-header"><span>🤖</span><span class="ai-label">AI Decision Recommendations</span></div>
+                <div class="space-y-2 mt-3">
+                    <div class="p-2 rounded bg-space-800 text-xs" style="color:#94a3b8;">📊 Allocate additional 15% water resources to southern districts facing deficit</div>
+                    <div class="p-2 rounded bg-space-800 text-xs" style="color:#94a3b8;">🌾 Issue advisory for early wheat sowing based on favorable weather forecast</div>
+                    <div class="p-2 rounded bg-space-800 text-xs" style="color:#94a3b8;">⚠️ Pre-position SDRF teams in flood-prone blocks for monsoon readiness</div>
+                    <div class="p-2 rounded bg-space-800 text-xs" style="color:#94a3b8;">🏥 Increase medical supplies in rural PHCs for anticipated heatwave</div>
+                    <div class="p-2 rounded bg-space-800 text-xs" style="color:#94a3b8;">💧 Review groundwater extraction permits - levels declining in 3 districts</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agriculture Tab -->
+    <div id="agricultureTab" class="hidden">
+        <div class="grid grid-3 gap-4">
+            <div class="glass-card p-5"><div class="flex justify-between items-center mb-3"><span style="font-size:24px;">🌾</span><span class="text-xs text-green px-2 py-1 rounded-full" style="background:rgba(0,255,136,0.1);">+3.2%</span></div><div class="text-xl font-bold font-mono" style="color:#e2e8f0;">24.5M tons</div><div class="text-xs" style="color:#64748b;">Crop Production</div></div>
+            <div class="glass-card p-5"><div class="flex justify-between items-center mb-3"><span style="font-size:24px;">🗺</span><span class="text-xs text-green px-2 py-1 rounded-full" style="background:rgba(0,255,136,0.1);">+1.1%</span></div><div class="text-xl font-bold font-mono" style="color:#e2e8f0;">18.7M ha</div><div class="text-xs" style="color:#64748b;">Area Under Cultivation</div></div>
+            <div class="glass-card p-5"><div class="flex justify-between items-center mb-3"><span style="font-size:24px;">💧</span><span class="text-xs text-green px-2 py-1 rounded-full" style="background:rgba(0,255,136,0.1);">+5%</span></div><div class="text-xl font-bold font-mono" style="color:#e2e8f0;">62%</div><div class="text-xs" style="color:#64748b;">Irrigation Coverage</div></div>
+            <div class="glass-card p-5"><div class="flex justify-between items-center mb-3"><span style="font-size:24px;">💰</span><span class="text-xs text-green px-2 py-1 rounded-full" style="background:rgba(0,255,136,0.1);">+12%</span></div><div class="text-xl font-bold font-mono" style="color:#e2e8f0;">₹4,200 Cr</div><div class="text-xs" style="color:#64748b;">MSP Procurement</div></div>
+            <div class="glass-card p-5"><div class="flex justify-between items-center mb-3"><span style="font-size:24px;">🧪</span><span class="text-xs text-green px-2 py-1 rounded-full" style="background:rgba(0,255,136,0.1);">+18%</span></div><div class="text-xl font-bold font-mono" style="color:#e2e8f0;">8.4M</div><div class="text-xs" style="color:#64748b;">Soil Health Cards Issued</div></div>
+            <div class="glass-card p-5"><div class="flex justify-between items-center mb-3"><span style="font-size:24px;">🌱</span><span class="text-xs text-green px-2 py-1 rounded-full" style="background:rgba(0,255,136,0.1);">+22%</span></div><div class="text-xl font-bold font-mono" style="color:#e2e8f0;">1.2M ha</div><div class="text-xs" style="color:#64748b;">Organic Farming</div></div>
+        </div>
+    </div>
+
+    <!-- Water Tab -->
+    <div id="waterTab" class="hidden">
+        <div class="grid grid-2 gap-4">
+            <div class="glass-card p-5"><div class="flex items-center gap-3 mb-3"><span style="font-size:32px;">🏞</span><div><div class="text-sm font-bold" style="color:#e2e8f0;">Reservoir Levels</div><div class="text-xs" style="color:#64748b;">Status: <span class="text-cyan">Normal</span></div></div></div><div class="text-3xl font-bold text-cyan font-mono">78%</div></div>
+            <div class="glass-card p-5"><div class="flex items-center gap-3 mb-3"><span style="font-size:32px;">💧</span><div><div class="text-sm font-bold" style="color:#e2e8f0;">Groundwater Index</div><div class="text-xs" style="color:#64748b;">Status: <span class="text-yellow">Moderate</span></div></div></div><div class="text-3xl font-bold text-cyan font-mono">6.2m depth</div></div>
+            <div class="glass-card p-5"><div class="flex items-center gap-3 mb-3"><span style="font-size:32px;">🌊</span><div><div class="text-sm font-bold" style="color:#e2e8f0;">River Flow</div><div class="text-xs" style="color:#64748b;">Status: <span class="text-green">Monitored</span></div></div></div><div class="text-3xl font-bold text-green">Normal</div></div>
+            <div class="glass-card p-5"><div class="flex items-center gap-3 mb-3"><span style="font-size:32px;">🌧</span><div><div class="text-sm font-bold" style="color:#e2e8f0;">Rainfall Deficit</div><div class="text-xs" style="color:#64748b;">Status: <span class="text-orange">Watch</span></div></div></div><div class="text-3xl font-bold text-orange font-mono">-8%</div></div>
+        </div>
+    </div>
+
+    <!-- Disaster Tab -->
+    <div id="disasterTab" class="hidden">
+        <div class="glass-card p-8 text-center">
+            <div style="font-size: 48px; margin-bottom: 16px;">⚡</div>
+            <h2 class="text-lg font-bold mb-2" style="color: #e2e8f0;">Disaster Management Dashboard</h2>
+            <p class="text-sm" style="color: #64748b;">Visit the dedicated <a href="/disaster" class="text-cyan">Disaster Center</a> for detailed analysis and alerts.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const states = {{ states | tojson }};
+
+    // Tab switching
+    document.querySelectorAll('.tabs .tab').forEach(tab => {
+        if (tab.dataset.tab) {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.querySelectorAll('[id$="Tab"]').forEach(p => p.classList.add('hidden'));
+                document.getElementById(tab.dataset.tab + 'Tab').classList.remove('hidden');
+            });
+        }
+    });
+
+    function updateStateInfo() {
+        const stateId = parseInt(document.getElementById('stateSelect').value);
+        const state = states.find(s => s.id === stateId);
+        if (!state) return;
+        
+        document.getElementById('stateInfo').innerHTML = `
+            <div class="p-2 rounded bg-space-800"><div class="text-xs" style="color:#64748b;">Capital</div><div class="text-xs font-medium" style="color:#e2e8f0;">${state.capital}</div></div>
+            <div class="p-2 rounded bg-space-800"><div class="text-xs" style="color:#64748b;">Population</div><div class="text-xs font-medium" style="color:#e2e8f0;">${(state.population/10000000).toFixed(1)}Cr</div></div>
+            <div class="p-2 rounded bg-space-800"><div class="text-xs" style="color:#64748b;">Area</div><div class="text-xs font-medium" style="color:#e2e8f0;">${state.area.toLocaleString()} km²</div></div>
+            <div class="p-2 rounded bg-space-800"><div class="text-xs" style="color:#64748b;">Region</div><div class="text-xs font-medium" style="color:#e2e8f0;">${state.region_type}</div></div>
+            <div class="p-2 rounded bg-space-800"><div class="text-xs" style="color:#64748b;">Coordinates</div><div class="text-xs font-medium" style="color:#e2e8f0;">${state.lat}°N, ${state.lng}°E</div></div>
+            <div class="p-2 rounded bg-space-800"><div class="text-xs" style="color:#64748b;">Districts</div><div class="text-xs font-medium" style="color:#e2e8f0;">30+</div></div>
+        `;
+    }
+
+    document.getElementById('stateSelect').addEventListener('change', updateStateInfo);
+    updateStateInfo();
+</script>
+{% endblock %}

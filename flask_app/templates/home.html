@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TWIN AI — AI-Powered Digital Twin of India's Climate</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .hero-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .particles {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: floatUp 12s linear infinite;
+        }
+        
+        @keyframes floatUp {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
+        }
+        
+        .glow-overlay {
+            position: absolute;
+            width: 800px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.1;
+        }
+        
+        .glow-cyan {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--cyber-blue);
+        }
+        
+        .glow-purple {
+            bottom: 0;
+            right: 0;
+            background: var(--cyber-purple);
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            border: 1px solid rgba(0,212,255,0.2);
+            background: rgba(0,212,255,0.05);
+            font-size: 12px;
+            color: var(--cyber-blue);
+        }
+        
+        .hero-main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 60px;
+        }
+        
+        @media (min-width: 1024px) {
+            .hero-main {
+                flex-direction: row;
+                gap: 80px;
+            }
+        }
+        
+        .hero-text {
+            text-align: center;
+            max-width: 500px;
+        }
+        
+        @media (min-width: 1024px) {
+            .hero-text { text-align: left; }
+        }
+        
+        .hero-title {
+            font-size: 60px;
+            font-weight: 700;
+            letter-spacing: -2px;
+            margin-bottom: 16px;
+        }
+        
+        @media (min-width: 768px) {
+            .hero-title { font-size: 80px; }
+        }
+        
+        .hero-tagline {
+            font-size: 18px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+        
+        .hero-description {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.7;
+            margin-bottom: 32px;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 32px;
+        }
+        
+        @media (min-width: 1024px) {
+            .hero-buttons { justify-content: flex-start; }
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        @media (min-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        @media (min-width: 1024px) {
+            .stat-item { text-align: left; }
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--cyber-blue);
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+        
+        .earth-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+        }
+        
+        @media (min-width: 768px) {
+            .earth-container {
+                width: 500px;
+                height: 500px;
+            }
+        }
+        
+        #earthCanvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .earth-data-point {
+            position: absolute;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            max-width: 900px;
+            width: 100%;
+            margin-top: 40px;
+        }
+        
+        @media (min-width: 768px) {
+            .features-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+        
+        .feature-card {
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .feature-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        
+        .feature-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 4px;
+        }
+        
+        .feature-desc {
+            font-size: 11px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+        
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            max-width: 700px;
+            width: 100%;
+            margin-top: 32px;
+        }
+        
+        @media (min-width: 768px) {
+            .modules-grid { grid-template-columns: repeat(6, 1fr); }
+        }
+        
+        .module-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px;
+            text-decoration: none;
+        }
+        
+        .module-link:hover { transform: scale(1.05); }
+        
+        .module-icon { font-size: 24px; margin-bottom: 4px; }
+        .module-label { font-size: 10px; color: #94a3b8; }
+        
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            font-size: 11px;
+            color: #475569;
+        }
+    </style>
+</head>
+<body class="grid-bg">
+    <div class="hero-container">
+        <!-- Particles -->
+        <div class="particles" id="particles"></div>
+        
+        <!-- Glow overlays -->
+        <div class="glow-overlay glow-cyan"></div>
+        <div class="glow-overlay glow-purple"></div>
+        
+        <div class="hero-content">
+            <!-- Badge -->
+            <div class="hero-badge fade-in-up">
+                <span class="live-dot"></span>
+                ISRO + IMD + ICAR Integrated Platform
+            </div>
+            
+            <!-- Main Section -->
+            <div class="hero-main">
+                <!-- Text Content -->
+                <div class="hero-text fade-in-up" style="animation-delay: 0.2s">
+                    <h1 class="hero-title">
+                        <span class="holo-text">TWIN</span>
+                        <span style="color: #cbd5e1; margin-left: 12px;">AI</span>
+                    </h1>
+                    <p class="hero-tagline">AI-Powered Digital Twin of India's Climate</p>
+                    <p class="hero-description">
+                        Monitor, predict, simulate & recommend actions for climate,
+                        agriculture, disaster management and government planning using
+                        national space data.
+                    </p>
+                    
+                    <div class="hero-buttons">
+                        <a href="/dashboard" class="btn-cyber">◆ Launch Dashboard</a>
+                        <a href="/twin-ai" class="btn-cyber btn-cyber-green">🤖 Ask Twin AI</a>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" data-count="28">0</div>
+                            <div class="stat-label">States Monitored</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" data-count="766">0</div>
+                            <div class="stat-label">Districts Covered</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" data-count="12847">0</div>
+                            <div class="stat-label">AI Predictions/day</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" data-count="14">0</div>
+                            <div class="stat-label">Satellites Active</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Earth Canvas -->
+                <div class="earth-container fade-in-up" style="animation-delay: 0.5s">
+                    <canvas id="earthCanvas"></canvas>
+                    <div class="earth-data-point glass-card" style="top: 20px; right: 0;">
+                        <div class="text-cyan font-mono">🌡 32.4°C</div>
+                        <div style="color: #64748b; font-size: 9px;">National Avg</div>
+                    </div>
+                    <div class="earth-data-point glass-card" style="bottom: 60px; left: 0; animation-delay: 1s;">
+                        <div class="text-green font-mono">💧 67%</div>
+                        <div style="color: #64748b; font-size: 9px;">Humidity</div>
+                    </div>
+                    <div class="earth-data-point glass-card" style="top: 50%; right: 0; animation-delay: 2s;">
+                        <div class="text-yellow font-mono">🛰 14</div>
+                        <div style="color: #64748b; font-size: 9px;">Satellites</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Features -->
+            <div class="features-grid fade-in-up" style="animation-delay: 0.7s">
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">🌍</div>
+                    <div class="feature-title">3D Digital Twin</div>
+                    <div class="feature-desc">Live 3D India globe with terrain, buildings, weather visualization</div>
+                </div>
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">🤖</div>
+                    <div class="feature-title">AI Predictions</div>
+                    <div class="feature-desc">ML-powered climate, crop yield, disaster risk predictions</div>
+                </div>
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-title">Smart Alerts</div>
+                    <div class="feature-desc">Real-time warnings with AI-generated action recommendations</div>
+                </div>
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">🔬</div>
+                    <div class="feature-title">Simulation Engine</div>
+                    <div class="feature-desc">Simulate climate scenarios and predict impact instantly</div>
+                </div>
+            </div>
+            
+            <!-- Module Links -->
+            <div class="modules-grid fade-in-up" style="animation-delay: 1s">
+                <a href="/climate" class="module-link glass-card">
+                    <span class="module-icon">🌡</span>
+                    <span class="module-label">Climate</span>
+                </a>
+                <a href="/agriculture" class="module-link glass-card">
+                    <span class="module-icon">🌾</span>
+                    <span class="module-label">Agriculture</span>
+                </a>
+                <a href="/disaster" class="module-link glass-card">
+                    <span class="module-icon">🌊</span>
+                    <span class="module-label">Disaster</span>
+                </a>
+                <a href="/government" class="module-link glass-card">
+                    <span class="module-icon">🏛</span>
+                    <span class="module-label">Government</span>
+                </a>
+                <a href="/analytics" class="module-link glass-card">
+                    <span class="module-icon">📊</span>
+                    <span class="module-label">Analytics</span>
+                </a>
+                <a href="/citizen" class="module-link glass-card">
+                    <span class="module-icon">👤</span>
+                    <span class="module-label">Citizen</span>
+                </a>
+            </div>
+            
+            <!-- Footer -->
+            <div class="footer">
+                <p>TWIN AI — Digital Twin Platform for India's Climate Intelligence</p>
+                <p style="margin-top: 4px;">Powered by ISRO • IMD • ICAR • Ministry of Agriculture • Ministry of Earth Sciences</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Animated counters
+        document.querySelectorAll('[data-count]').forEach(el => {
+            const target = parseInt(el.dataset.count);
+            let current = 0;
+            const duration = 2000;
+            const start = Date.now();
+            
+            function update() {
+                const elapsed = Date.now() - start;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                current = Math.floor(eased * target);
+                el.textContent = current.toLocaleString();
+                if (progress < 1) requestAnimationFrame(update);
+            }
+            
+            setTimeout(update, 500);
+        });
+        
+        // Create particles
+        const particles = document.getElementById('particles');
+        for (let i = 0; i < 30; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const size = Math.random() * 3 + 1;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+            p.style.background = ['#00d4ff', '#00ff88', '#8b5cf6'][i % 3];
+            p.style.left = Math.random() * 100 + '%';
+            p.style.bottom = '-10px';
+            p.style.animationDelay = Math.random() * 8 + 's';
+            p.style.animationDuration = (8 + Math.random() * 12) + 's';
+            particles.appendChild(p);
+        }
+        
+        // Earth Canvas
+        const canvas = document.getElementById('earthCanvas');
+        const ctx = canvas.getContext('2d');
+        const w = 500, h = 500;
+        canvas.width = w;
+        canvas.height = h;
+        
+        const cx = w / 2, cy = h / 2, r = 180;
+        let angle = 0;
+        
+        const indiaCoords = [
+            [77, 28.6], [72.8, 19], [80.2, 13], [88.4, 22.6], [75.8, 26.9],
+            [78.5, 17.4], [76.6, 12], [85.8, 20.3], [73.9, 15.5], [82, 25],
+            [91.8, 26.2], [79, 21.1], [74, 22.3], [83, 17], [77, 11]
+        ];
+        
+        function draw() {
+            ctx.clearRect(0, 0, w, h);
+            
+            // Glow
+            const glow = ctx.createRadialGradient(cx, cy, r - 20, cx, cy, r + 80);
+            glow.addColorStop(0, 'rgba(0,212,255,0.08)');
+            glow.addColorStop(0.5, 'rgba(0,212,255,0.03)');
+            glow.addColorStop(1, 'transparent');
+            ctx.fillStyle = glow;
+            ctx.fillRect(0, 0, w, h);
+            
+            // Globe
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            const grad = ctx.createRadialGradient(cx - 40, cy - 40, 10, cx, cy, r);
+            grad.addColorStop(0, '#0a2a4a');
+            grad.addColorStop(0.5, '#061428');
+            grad.addColorStop(1, '#020a14');
+            ctx.fillStyle = grad;
+            ctx.fill();
+            
+            // Grid
+            ctx.strokeStyle = 'rgba(0,212,255,0.08)';
+            ctx.lineWidth = 0.5;
+            
+            for (let lat = -80; lat <= 80; lat += 20) {
+                const y = cy + r * Math.sin(lat * Math.PI / 180);
+                const latR = r * Math.cos(lat * Math.PI / 180);
+                if (latR > 0) {
+                    ctx.beginPath();
+                    ctx.ellipse(cx, y, latR, latR * 0.15, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+            
+            for (let lon = 0; lon < 180; lon += 30) {
+                ctx.beginPath();
+                const rotLon = lon + angle;
+                for (let lat = -90; lat <= 90; lat += 2) {
+                    const x = cx + r * Math.cos(lat * Math.PI / 180) * Math.sin(rotLon * Math.PI / 180);
+                    const y = cy - r * Math.sin(lat * Math.PI / 180);
+                    const z = Math.cos(lat * Math.PI / 180) * Math.cos(rotLon * Math.PI / 180);
+                    if (z > 0) {
+                        if (lat === -90) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+            }
+            
+            // India points
+            ctx.fillStyle = '#00ff88';
+            ctx.shadowColor = '#00ff88';
+            ctx.shadowBlur = 8;
+            indiaCoords.forEach(([lon, lat]) => {
+                const rotLon = (lon - 78 + angle) * Math.PI / 180;
+                const latRad = lat * Math.PI / 180;
+                const x = cx + r * Math.cos(latRad) * Math.sin(rotLon);
+                const y = cy - r * Math.sin(latRad);
+                const z = Math.cos(latRad) * Math.cos(rotLon);
+                if (z > 0) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, 2.5 + z * 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+            ctx.shadowBlur = 0;
+            
+            // Atmosphere
+            ctx.beginPath();
+            ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(0,212,255,0.15)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Satellite
+            const satAngle = angle * 3 * Math.PI / 180;
+            const satX = cx + (r + 30) * Math.cos(satAngle);
+            const satY = cy + (r + 30) * Math.sin(satAngle) * 0.3;
+            ctx.fillStyle = '#ffd700';
+            ctx.shadowColor = '#ffd700';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(satX, satY, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // Orbit
+            ctx.strokeStyle = 'rgba(255,215,0,0.1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, r + 30, (r + 30) * 0.3, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            angle += 0.15;
+            requestAnimationFrame(draw);
+        }
+        
+        draw();
+    </script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header flex justify-between items-center">
+        <div>
+            <h1 class="page-title">Mission Control</h1>
+            <p class="page-subtitle">National Climate Intelligence Dashboard</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="text-xs" style="color: #64748b;" id="dateDisplay"></span>
+            <span class="text-sm font-bold text-cyan font-mono" id="timeDisplay"></span>
+            <div class="live-indicator">
+                <span class="live-dot"></span> LIVE
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status Bar -->
+    <div class="glass-card p-3 mb-4 flex items-center gap-4 text-xs" style="flex-wrap: wrap;">
+        <div class="flex items-center gap-2">
+            <span class="live-dot"></span>
+            <span style="color: #94a3b8;">System: <span class="text-green">Operational</span></span>
+        </div>
+        <span style="color: #334155;">|</span>
+        <span style="color: #94a3b8;">🛰 Satellites: <span class="text-cyan font-mono" id="statSatellites">14</span></span>
+        <span style="color: #334155;">|</span>
+        <span style="color: #94a3b8;">🤖 AI Models: <span class="text-purple font-mono" id="statModels">23</span></span>
+        <span style="color: #334155;">|</span>
+        <span style="color: #94a3b8;">📡 Stations: <span class="text-cyan font-mono" id="statStations">4,562</span></span>
+        <span style="color: #334155;">|</span>
+        <span style="color: #94a3b8;">📊 Predictions Today: <span class="text-green font-mono" id="statPredictions">12,847</span></span>
+        <span style="color: #334155;">|</span>
+        <span style="color: #94a3b8;">⚠️ Active Alerts: <span class="text-red font-mono" id="statAlerts">4</span></span>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="grid grid-6 mb-4">
+        <div class="glass-card metric-card">
+            <div class="metric-icon">🌡</div>
+            <div class="metric-value text-orange" id="metricTemp">32.4<span class="metric-unit">°C</span></div>
+            <div class="metric-label">National Avg Temperature</div>
+        </div>
+        <div class="glass-card metric-card">
+            <div class="metric-icon">💧</div>
+            <div class="metric-value text-cyan" id="metricHumidity">67<span class="metric-unit">%</span></div>
+            <div class="metric-label">Average Humidity</div>
+        </div>
+        <div class="glass-card metric-card">
+            <div class="metric-icon">🌧</div>
+            <div class="metric-value text-cyan" id="metricRainfall">245.6<span class="metric-unit">mm</span></div>
+            <div class="metric-label">Total Rainfall</div>
+        </div>
+        <div class="glass-card metric-card">
+            <div class="metric-icon">🌫</div>
+            <div class="metric-value text-yellow" id="metricAqi">156<span class="metric-unit">AQI</span></div>
+            <div class="metric-label">Average AQI</div>
+        </div>
+        <div class="glass-card metric-card">
+            <div class="metric-icon">🗺</div>
+            <div class="metric-value text-green">28</div>
+            <div class="metric-label">States Monitored</div>
+        </div>
+        <div class="glass-card metric-card">
+            <div class="metric-icon">📍</div>
+            <div class="metric-value text-purple">766</div>
+            <div class="metric-label">Districts Covered</div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-4 mb-4">
+        <div class="glass-card p-4">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-xs" style="color: #94a3b8;">Temperature (24h)</span>
+                <span class="text-xs text-orange font-mono">32.4°C</span>
+            </div>
+            <canvas id="chartTemp" height="80"></canvas>
+        </div>
+        <div class="glass-card p-4">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-xs" style="color: #94a3b8;">Rainfall (24h)</span>
+                <span class="text-xs text-cyan font-mono">18.2mm</span>
+            </div>
+            <canvas id="chartRain" height="80"></canvas>
+        </div>
+        <div class="glass-card p-4">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-xs" style="color: #94a3b8;">Air Quality (24h)</span>
+                <span class="text-xs text-yellow font-mono">156 AQI</span>
+            </div>
+            <canvas id="chartAqi" height="80"></canvas>
+        </div>
+        <div class="glass-card p-4">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-xs" style="color: #94a3b8;">Humidity (24h)</span>
+                <span class="text-xs text-green font-mono">67%</span>
+            </div>
+            <canvas id="chartHumid" height="80"></canvas>
+        </div>
+    </div>
+
+    <!-- Bottom Grid -->
+    <div class="grid grid-3">
+        <!-- Alerts -->
+        <div class="glass-card p-5">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-sm font-bold" style="color: #e2e8f0;">⚠️ Active Alerts</h2>
+                <span class="text-xs text-red font-mono" style="animation: pulse 2s infinite;">4 ACTIVE</span>
+            </div>
+            <div class="space-y-3" id="alertsList">
+                <!-- Loaded via JS -->
+            </div>
+        </div>
+
+        <!-- India Map -->
+        <div class="glass-card p-5">
+            <h2 class="text-sm font-bold mb-4" style="color: #e2e8f0;">🗺 National Overview</h2>
+            <svg viewBox="0 0 400 400" style="width: 100%; height: 280px;">
+                <ellipse cx="200" cy="180" rx="120" ry="150" fill="none" stroke="rgba(0,212,255,0.15)" stroke-width="1"/>
+                <!-- State dots -->
+                <g class="state-dots">
+                    <circle cx="200" cy="60" r="4" fill="#00d4ff"/><text x="214" y="64" fill="#64748b" font-size="9">J&K</text>
+                    <circle cx="170" cy="100" r="4" fill="#00ff88"/><text x="180" y="104" fill="#64748b" font-size="9">PB</text>
+                    <circle cx="210" cy="100" r="4" fill="#ff8800"/><text x="220" y="104" fill="#64748b" font-size="9">UP</text>
+                    <circle cx="250" cy="120" r="4" fill="#8b5cf6"/><text x="260" y="124" fill="#64748b" font-size="9">BR</text>
+                    <circle cx="140" cy="140" r="4" fill="#ffd700"/><text x="150" y="144" fill="#64748b" font-size="9">RJ</text>
+                    <circle cx="130" cy="180" r="4" fill="#00d4ff"/><text x="100" y="184" fill="#64748b" font-size="9">GJ</text>
+                    <circle cx="200" cy="160" r="4" fill="#00ff88"/><text x="210" y="164" fill="#64748b" font-size="9">MP</text>
+                    <circle cx="280" cy="140" r="4" fill="#ff006e"/><text x="290" y="144" fill="#64748b" font-size="9">AS</text>
+                    <circle cx="270" cy="170" r="4" fill="#ff8800"/><text x="280" y="174" fill="#64748b" font-size="9">WB</text>
+                    <circle cx="160" cy="210" r="4" fill="#8b5cf6"/><text x="125" y="214" fill="#64748b" font-size="9">MH</text>
+                    <circle cx="230" cy="200" r="4" fill="#00d4ff"/><text x="240" y="204" fill="#64748b" font-size="9">OD</text>
+                    <circle cx="210" cy="240" r="4" fill="#ffd700"/><text x="220" y="244" fill="#64748b" font-size="9">TS</text>
+                    <circle cx="180" cy="260" r="4" fill="#00ff88"/><text x="145" y="264" fill="#64748b" font-size="9">KA</text>
+                    <circle cx="210" cy="280" r="4" fill="#ff8800"/><text x="220" y="284" fill="#64748b" font-size="9">AP</text>
+                    <circle cx="240" cy="260" r="4" fill="#8b5cf6"/><text x="250" y="264" fill="#64748b" font-size="9">TN</text>
+                    <circle cx="170" cy="300" r="4" fill="#00d4ff"/><text x="140" y="304" fill="#64748b" font-size="9">KL</text>
+                </g>
+            </svg>
+        </div>
+
+        <!-- Quick Actions + AI Insight -->
+        <div class="space-y-4">
+            <div class="glass-card p-5">
+                <h2 class="text-sm font-bold mb-4" style="color: #e2e8f0;">🚀 Quick Actions</h2>
+                <div class="grid grid-2 gap-2">
+                    <a href="/climate" class="glass-card p-3 text-center cursor-pointer" style="text-decoration: none;">
+                        <div style="font-size: 20px;">🌡</div>
+                        <div class="text-xs" style="color: #94a3b8;">Climate Monitor</div>
+                    </a>
+                    <a href="/agriculture" class="glass-card p-3 text-center cursor-pointer" style="text-decoration: none;">
+                        <div style="font-size: 20px;">🌾</div>
+                        <div class="text-xs" style="color: #94a3b8;">Crop Advisory</div>
+                    </a>
+                    <a href="/disaster" class="glass-card p-3 text-center cursor-pointer" style="text-decoration: none;">
+                        <div style="font-size: 20px;">⚡</div>
+                        <div class="text-xs" style="color: #94a3b8;">Disaster Alert</div>
+                    </a>
+                    <a href="/simulation" class="glass-card p-3 text-center cursor-pointer" style="text-decoration: none;">
+                        <div style="font-size: 20px;">🔬</div>
+                        <div class="text-xs" style="color: #94a3b8;">Run Simulation</div>
+                    </a>
+                    <a href="/twin-ai" class="glass-card p-3 text-center cursor-pointer" style="text-decoration: none;">
+                        <div style="font-size: 20px;">🤖</div>
+                        <div class="text-xs" style="color: #94a3b8;">Ask Twin AI</div>
+                    </a>
+                    <a href="/analytics" class="glass-card p-3 text-center cursor-pointer" style="text-decoration: none;">
+                        <div style="font-size: 20px;">📊</div>
+                        <div class="text-xs" style="color: #94a3b8;">Analytics</div>
+                    </a>
+                </div>
+            </div>
+
+            <div class="glass-card p-5 ai-insight">
+                <div class="ai-header">
+                    <span style="font-size: 16px;">🤖</span>
+                    <span class="ai-label">AI INSIGHT</span>
+                </div>
+                <p class="ai-content">
+                    Western Disturbance approaching North India. Expected 40-60mm rainfall in Punjab,
+                    Haryana, and UP over next 72 hours. Recommend pre-positioning NDRF teams and
+                    issuing early warnings for low-lying areas. Crop harvest advisory issued for wheat
+                    belt regions.
+                </p>
+                <div class="mt-3 flex gap-2 text-xs" style="color: #475569;">
+                    <span>Model: TWIN-AI v3.2</span>
+                    <span>•</span>
+                    <span class="text-green">Confidence: 87%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Time display
+    function updateTime() {
+        const now = new Date();
+        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-IN', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+        document.getElementById('timeDisplay').textContent = now.toLocaleTimeString('en-IN');
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // Draw mini charts
+    function drawMiniChart(canvasId, data, color) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width = canvas.offsetWidth * 2;
+        const h = canvas.height = 80 * 2;
+        ctx.scale(2, 2);
+        
+        const max = Math.max(...data);
+        const min = Math.min(...data);
+        const range = max - min || 1;
+        
+        // Gradient fill
+        const grad = ctx.createLinearGradient(0, 0, 0, 40);
+        grad.addColorStop(0, color + '33');
+        grad.addColorStop(1, color + '00');
+        
+        ctx.beginPath();
+        ctx.moveTo(0, 40);
+        data.forEach((v, i) => {
+            const x = (i / (data.length - 1)) * (w / 2);
+            const y = 40 - ((v - min) / range) * 35;
+            ctx.lineTo(x, y);
+        });
+        ctx.lineTo(w / 2, 40);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+        
+        // Line
+        ctx.beginPath();
+        data.forEach((v, i) => {
+            const x = (i / (data.length - 1)) * (w / 2);
+            const y = 40 - ((v - min) / range) * 35;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    // Generate random data
+    const tempData = Array.from({length: 24}, () => 25 + Math.random() * 15);
+    const rainData = Array.from({length: 24}, () => Math.random() * 80);
+    const aqiData = Array.from({length: 24}, () => 50 + Math.random() * 250);
+    const humidData = Array.from({length: 24}, () => 40 + Math.random() * 50);
+
+    setTimeout(() => {
+        drawMiniChart('chartTemp', tempData, '#ff8800');
+        drawMiniChart('chartRain', rainData, '#00d4ff');
+        drawMiniChart('chartAqi', aqiData, '#ffd700');
+        drawMiniChart('chartHumid', humidData, '#00ff88');
+    }, 100);
+
+    // Load dashboard data
+    fetch('/api/dashboard')
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('metricTemp').innerHTML = data.national.avg_temperature + '<span class="metric-unit">°C</span>';
+            document.getElementById('metricHumidity').innerHTML = data.national.avg_humidity + '<span class="metric-unit">%</span>';
+            document.getElementById('metricRainfall').innerHTML = data.national.total_rainfall + '<span class="metric-unit">mm</span>';
+            document.getElementById('metricAqi').innerHTML = data.national.avg_aqi + '<span class="metric-unit">AQI</span>';
+            document.getElementById('statAlerts').textContent = data.national.alerts_active;
+            
+            // Render alerts
+            const alertsHtml = data.recent_alerts.map(a => `
+                <div class="p-3 rounded-lg bg-space-800" style="border: 1px solid #1e293b;">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-bold" style="color: #e2e8f0;">${a.title}</span>
+                        <span class="alert-badge alert-${a.severity}">${a.severity}</span>
+                    </div>
+                    <div class="text-xs" style="color: #64748b;">📍 ${a.state}</div>
+                </div>
+            `).join('');
+            document.getElementById('alertsList').innerHTML = alertsHtml;
+        });
+</script>
+{% endblock %}
