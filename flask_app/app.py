@@ -4,18 +4,25 @@ AI-Powered Digital Twin of India's Climate
 Main application entry point
 """
 import os
-from flask import Flask, render_template, jsonify, request
+import re
+from urllib.parse import urljoin, urlparse
+
+from flask import Flask, render_template, jsonify, request, session, redirect, url_for, g
 from flask_cors import CORS
 from datetime import datetime
 import random
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from config import Config
-from models import db
+from models import db, User
 from data import (
     INDIA_STATES, CROP_LIST, GOVERNMENT_SCHEMES,
     generate_climate_data, generate_predictions, generate_alerts,
     generate_crop_recommendations, run_simulation, get_ai_response, get_state_by_id
 )
+
+
+EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 
 
 def create_app():
@@ -30,6 +37,107 @@ def create_app():
     # Create tables
     with app.app_context():
         db.create_all()
+
+    def is_safe_next(target):
+        if not target:
+            return False
+
+        reference = urlparse(request.host_url)
+        candidate = urlparse(urljoin(request.host_url, target))
+        return candidate.scheme in {"http", "https"} and reference.netloc == candidate.netloc
+
+    def get_next_url(default_endpoint="dashboard"):
+        target = request.values.get("next")
+        default_url = url_for(default_endpoint)
+        return target if is_safe_next(target) else default_url
+
+    def render_auth_page(mode, error=None, values=None):
+        if mode == "login":
+            copy = {
+                "eyebrow": "Secure mission access",
+                "title": "Welcome back to TWIN AI",
+                "subtitle": "Sign in to continue monitoring climate, agriculture, disaster, and governance intelligence.",
+                "panel_title": "Sign in to your account",
+                "panel_subtitle": "Use your registered email and password to continue where you left off.",
+                "cta_label": "Sign In",
+                "switch_prompt": "New here?",
+                "switch_label": "Create an account",
+                "switch_href": url_for("signup", next=get_next_url()),
+                "features": [
+                    {
+                        "icon": "🔐",
+                        "title": "HTTP-only sessions",
+                        "description": "Your browser session stays protected by Flask cookies.",
+                    },
+                    {
+                        "icon": "🛰",
+                        "title": "Fast access",
+                        "description": "Jump straight back into dashboards and AI tools.",
+                    },
+                    {
+                        "icon": "🌍",
+                        "title": "Platform ready",
+                        "description": "The same login can unlock the broader TWIN AI stack.",
+                    },
+                ],
+            }
+        else:
+            copy = {
+                "eyebrow": "Create your mission account",
+                "title": "Join the TWIN AI platform",
+                "subtitle": "Register once and keep your profile ready for future auth and personalization features.",
+                "panel_title": "Create your account",
+                "panel_subtitle": "Use a valid email and a strong password to start your session.",
+                "cta_label": "Create Account",
+                "switch_prompt": "Already have an account?",
+                "switch_label": "Sign in instead",
+                "switch_href": url_for("login", next=get_next_url()),
+                "features": [
+                    {
+                        "icon": "🛡",
+                        "title": "Password hashing",
+                        "description": "Passwords are hashed before they are stored in the database.",
+                    },
+                    {
+                        "icon": "🧬",
+                        "title": "User profiles",
+                        "description": "The account table already supports roles, language, and region data.",
+                    },
+                    {
+                        "icon": "⚡",
+                        "title": "Ready for growth",
+                        "description": "This auth layer can expand into permissions or admin access later.",
+                    },
+                ],
+            }
+
+        return render_template(
+            "auth.html",
+            mode=mode,
+            copy=copy,
+            error=error,
+            values=values or {},
+            next_url=get_next_url(),
+        )
+
+    @app.before_request
+    def load_current_user():
+        user_id = session.get("user_id")
+
+        if not user_id:
+            g.current_user = None
+            return
+
+        g.current_user = db.session.get(User, user_id)
+        if g.current_user is None:
+            session.pop("user_id", None)
+
+    @app.context_processor
+    def inject_auth_context():
+        return {
+            "current_user": getattr(g, "current_user", None),
+            "is_authenticated": getattr(g, "current_user", None) is not None,
+        }
     
     # ─────────────────────────── PAGE ROUTES ───────────────────────────
     
@@ -82,6 +190,89 @@ def create_app():
     def citizen():
         """Citizen portal page"""
         return render_template('citizen.html', states=INDIA_STATES)
+
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        """User sign in page"""
+        if g.current_user:
+            return redirect(url_for("dashboard"))
+
+        error = None
+        values = {"email": ""}
+
+        if request.method == "POST":
+            values["email"] = request.form.get("email", "").strip()
+            password = request.form.get("password", "")
+            email = values["email"].lower()
+
+            if not email or not password:
+                error = "Email and password are required."
+            elif not EMAIL_RE.match(email):
+                error = "Enter a valid email address."
+            else:
+                user = User.query.filter_by(email=email).first()
+                if not user or not user.is_active:
+                    error = "Invalid email or password."
+                elif not check_password_hash(user.password_hash, password):
+                    error = "Invalid email or password."
+                else:
+                    session.clear()
+                    session["user_id"] = user.id
+                    return redirect(get_next_url())
+
+        return render_auth_page("login", error=error, values=values)
+
+    @app.route('/signup', methods=['GET', 'POST'])
+    def signup():
+        """User registration page"""
+        if g.current_user:
+            return redirect(url_for("dashboard"))
+
+        error = None
+        values = {"name": "", "email": ""}
+
+        if request.method == "POST":
+            values["name"] = request.form.get("name", "").strip()
+            values["email"] = request.form.get("email", "").strip()
+            password = request.form.get("password", "")
+            confirm_password = request.form.get("confirm_password", "")
+            name = " ".join(values["name"].split())
+            email = values["email"].lower()
+
+            if len(name) < 2:
+                error = "Name must be at least 2 characters."
+            elif not EMAIL_RE.match(email):
+                error = "Enter a valid email address."
+            elif len(password) < 8:
+                error = "Password must be at least 8 characters."
+            elif password != confirm_password:
+                error = "Passwords do not match."
+            elif User.query.filter_by(email=email).first():
+                error = "An account with that email already exists."
+            else:
+                try:
+                    user = User(
+                        email=email,
+                        name=name,
+                        password_hash=generate_password_hash(password),
+                        role="citizen",
+                    )
+                    db.session.add(user)
+                    db.session.commit()
+                    session.clear()
+                    session["user_id"] = user.id
+                    return redirect(get_next_url())
+                except Exception:
+                    db.session.rollback()
+                    error = "Unable to create your account right now."
+
+        return render_auth_page("signup", error=error, values=values)
+
+    @app.route('/logout', methods=['POST'])
+    def logout():
+        """Sign out the active user"""
+        session.clear()
+        return redirect(url_for("home"))
     
     # ─────────────────────────── API ROUTES ───────────────────────────
     

@@ -77,6 +77,21 @@ export default function TopNav() {
             </span>
           </div>
 
+          <div className="hidden lg:flex items-center gap-2">
+            <Link
+              href="/login"
+              className="theme-nav-toggle inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium transition-all hover:border-cyan-400/40"
+            >
+              Login
+            </Link>
+            <Link
+              href="/signup"
+              className="inline-flex items-center rounded-md border border-cyan-500/25 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300 transition-all hover:bg-cyan-500/15"
+            >
+              Sign Up
+            </Link>
+          </div>
+
           <button
             type="button"
             aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
@@ -124,6 +139,22 @@ export default function TopNav() {
                 </Link>
               );
             })}
+          </div>
+          <div className="grid grid-cols-2 gap-2 border-t border-white/10 p-3">
+            <Link
+              href="/login"
+              onClick={() => setMobileOpen(false)}
+              className="theme-nav-toggle inline-flex items-center justify-center rounded-lg px-3 py-2 text-xs font-medium transition-all"
+            >
+              Login
+            </Link>
+            <Link
+              href="/signup"
+              onClick={() => setMobileOpen(false)}
+              className="inline-flex items-center justify-center rounded-lg border border-cyan-500/25 bg-cyan-500/10 px-3 py-2 text-xs font-medium text-cyan-300 transition-all"
+            >
+              Sign Up
+            </Link>
           </div>
         </div>
       )}

@@ -71,15 +71,45 @@
                     <span>👤</span> Citizen
                 </a>
             </div>
-            
+
             <div class="nav-status">
                 <span class="nav-badge">🛰 14 Satellites</span>
                 <span class="nav-badge">🤖 23 AI Models</span>
+                {% if current_user %}
+                <span class="nav-badge">👤 {{ current_user.name }}</span>
+                {% endif %}
+                <div class="nav-auth-actions">
+                    {% if current_user %}
+                    <form action="{{ url_for('logout') }}" method="post" style="margin: 0;">
+                        <button type="submit" class="theme-toggle nav-theme-toggle">Logout</button>
+                    </form>
+                    {% else %}
+                    <a href="{{ url_for('login') }}" class="theme-toggle nav-theme-toggle">Login</a>
+                    <a href="{{ url_for('signup') }}" class="theme-toggle nav-theme-toggle">Sign Up</a>
+                    {% endif %}
+                </div>
                 <button type="button" class="theme-toggle nav-theme-toggle" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
                     <span class="theme-toggle-icon" data-theme-icon>🌙</span>
                     <span data-theme-label>Dark</span>
                 </button>
             </div>
+        </div>
+        <div class="mobile-auth-links">
+            {% if current_user %}
+            <span class="nav-badge">👤 {{ current_user.name }}</span>
+            <form action="{{ url_for('logout') }}" method="post" style="margin: 0;">
+                <button type="submit" class="nav-link" style="width: 100%; justify-content: center; border: 1px solid var(--badge-border); background: var(--badge-bg);">
+                    <span>↪</span> Logout
+                </button>
+            </form>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="nav-link" style="justify-content: center; border: 1px solid var(--badge-border); background: var(--badge-bg);">
+                <span>🔐</span> Login
+            </a>
+            <a href="{{ url_for('signup') }}" class="nav-link" style="justify-content: center; border: 1px solid rgba(0,212,255,0.2); background: rgba(0,212,255,0.08); color: var(--cyber-blue);">
+                <span>✨</span> Sign Up
+            </a>
+            {% endif %}
         </div>
     </nav>
 

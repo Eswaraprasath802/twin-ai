@@ -1,12 +1,15 @@
 {
-  "name": "nextjs-postgresql-template",
+  "name": "twin-ai-mobile",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "compose:up": "docker compose up -d",
+    "compose:down": "docker compose down",
+    "compose:logs": "docker compose logs -f mongodb"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -18,6 +21,7 @@
     "framer-motion": "^12.42.2",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.24.0",
+    "mongodb": "^6.21.0",
     "next": "16.2.6",
     "pg": "8.20.0",
     "react": "19.2.6",

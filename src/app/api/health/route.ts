@@ -1,20 +1,31 @@
-import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { db } from "@/db";
+import { connectToDatabase } from "@/lib/mongodb";
+
+export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    if (db) {
-      await db.execute(sql`SELECT 1`);
+    const mongoConfigured = Boolean(process.env.MONGODB_URI);
+
+    if (mongoConfigured) {
+      const { db } = await connectToDatabase();
+      await db.command({ ping: 1 });
     }
 
     return NextResponse.json({
       status: "healthy",
       service: "TWIN AI",
       timestamp: new Date().toISOString(),
-      database: db ? "connected" : "not configured",
+      database: mongoConfigured ? "connected" : "not configured",
     });
-  } catch {
-    return NextResponse.json({ status: "unhealthy" }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        status: "unhealthy",
+        database: "disconnected",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    );
   }
 }

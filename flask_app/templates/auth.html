@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}{{ "Login" if mode == "login" else "Sign Up" }}{% endblock %}
+
+{% block content %}
+<div class="auth-shell">
+    <div class="auth-layout">
+        <section class="glass-card auth-panel">
+            <div class="auth-panel-inner">
+                <p class="auth-eyebrow">{{ copy.eyebrow }}</p>
+                <h1 class="auth-title">{{ copy.title }}</h1>
+                <p class="auth-subtitle">{{ copy.subtitle }}</p>
+
+                <div class="auth-feature-list">
+                    {% for feature in copy.features %}
+                    <article class="auth-feature">
+                        <div class="auth-feature-icon">{{ feature.icon }}</div>
+                        <div class="auth-feature-title">{{ feature.title }}</div>
+                        <div class="auth-feature-desc">{{ feature.description }}</div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="glass-card auth-form-panel">
+            <div class="auth-panel-inner">
+                <div class="auth-form-head">
+                    <p class="auth-eyebrow">Secure access</p>
+                    <h2 class="auth-heading">{{ copy.panel_title }}</h2>
+                    <p class="auth-copy">{{ copy.panel_subtitle }}</p>
+                </div>
+
+                {% if error %}
+                <div class="auth-message error">{{ error }}</div>
+                {% endif %}
+
+                <form method="post" class="auth-form">
+                    <input type="hidden" name="next" value="{{ next_url }}">
+
+                    {% if mode == "signup" %}
+                    <label class="auth-field">
+                        <span class="auth-label">Full name</span>
+                        <input
+                            type="text"
+                            name="name"
+                            class="auth-input"
+                            value="{{ values.get('name', '') }}"
+                            placeholder="Aarav Sharma"
+                            minlength="2"
+                            autocomplete="name"
+                            required
+                        >
+                    </label>
+                    {% endif %}
+
+                    <label class="auth-field">
+                        <span class="auth-label">Email address</span>
+                        <input
+                            type="email"
+                            name="email"
+                            class="auth-input"
+                            value="{{ values.get('email', '') }}"
+                            placeholder="name@example.com"
+                            autocomplete="email"
+                            required
+                        >
+                    </label>
+
+                    <label class="auth-field">
+                        <span class="auth-label">Password</span>
+                        <input
+                            type="password"
+                            name="password"
+                            class="auth-input"
+                            placeholder="{{ 'Create a strong password' if mode == 'signup' else 'Enter your password' }}"
+                            minlength="8"
+                            autocomplete="{{ 'new-password' if mode == 'signup' else 'current-password' }}"
+                            required
+                        >
+                    </label>
+
+                    {% if mode == "signup" %}
+                    <label class="auth-field">
+                        <span class="auth-label">Confirm password</span>
+                        <input
+                            type="password"
+                            name="confirm_password"
+                            class="auth-input"
+                            placeholder="Re-enter your password"
+                            minlength="8"
+                            autocomplete="new-password"
+                            required
+                        >
+                    </label>
+                    {% endif %}
+
+                    <button type="submit" class="auth-submit">{{ copy.cta_label }}</button>
+                </form>
+
+                <div class="auth-help">
+                    Keep your credentials private. Sign out from the navigation bar when you finish your session.
+                </div>
+
+                <div class="auth-switch">
+                    {{ copy.switch_prompt }}
+                    <a href="{{ copy.switch_href }}">{{ copy.switch_label }}</a>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

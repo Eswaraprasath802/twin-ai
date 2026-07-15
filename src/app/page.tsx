@@ -197,6 +197,12 @@ export default function HomePage() {
             </p>
 
             <div className="flex flex-wrap gap-3 justify-center lg:justify-start mb-8">
+              <Link href="/login" className="btn-cyber text-sm">
+                Sign In
+              </Link>
+              <Link href="/signup" className="btn-cyber btn-green text-sm">
+                Create Account
+              </Link>
               <Link href="/dashboard" className="btn-cyber text-sm">
                 ◆ Next.js Dashboard
               </Link>
