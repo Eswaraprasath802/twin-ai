@@ -5,7 +5,16 @@ Main application entry point
 """
 import os
 import re
+import sys
 from urllib.parse import urljoin, urlparse
+
+# When Apache/mod_wsgi executes this file as the WSGI script, it does not
+# consistently include this directory in ``sys.path``.  Add the directory that
+# contains the Flask modules so sibling imports (config, models, and data) work
+# both under mod_wsgi and when started through ``run_flask.py``.
+APP_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+if APP_DIRECTORY not in sys.path:
+    sys.path.insert(0, APP_DIRECTORY)
 
 from flask import Flask, render_template, jsonify, request, session, redirect, url_for, g
 from flask_cors import CORS
@@ -487,6 +496,8 @@ def create_app():
 
 # Create application instance
 app = create_app()
+# ``application`` is the callable name mod_wsgi looks for by default.
+application = app
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 3000))
