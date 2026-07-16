@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% block title %}Map Explorer{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header flex justify-between items-center map-page-header">
+        <div>
+            <h1 class="page-title">🗺 Geospatial Intelligence Map</h1>
+            <p class="page-subtitle">Select a state to connect its live weather conditions with crop and field advisories.</p>
+        </div>
+        <div class="map-live-status"><span class="live-dot"></span> MAP LAYER LIVE</div>
+    </div>
+
+    <div class="map-layout">
+        <section class="glass-card map-card" aria-labelledby="mapTitle">
+            <div class="map-toolbar">
+                <div>
+                    <h2 id="mapTitle" class="text-sm font-bold">India state intelligence layer</h2>
+                    <p class="text-xs">Each marker opens weather, crop suitability, and a local field advisory.</p>
+                </div>
+                <span class="map-selection-count" id="mapStatus">Loading climate layer…</span>
+            </div>
+
+            <div class="map-canvas">
+                <svg id="stateMap" class="state-map" viewBox="0 0 520 590" role="img" aria-labelledby="mapTitle mapDescription">
+                    <desc id="mapDescription">A stylised map of India with one selectable marker for every state in the platform.</desc>
+                    <defs>
+                        <linearGradient id="indiaFill" x1="0" x2="0" y1="0" y2="1">
+                            <stop offset="0%" stop-color="rgba(0, 212, 255, 0.12)" />
+                            <stop offset="100%" stop-color="rgba(0, 255, 136, 0.04)" />
+                        </linearGradient>
+                        <pattern id="mapGrid" width="24" height="24" patternUnits="userSpaceOnUse">
+                            <path d="M 24 0 L 0 0 0 24" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.18" />
+                        </pattern>
+                    </defs>
+                    <rect class="map-grid" x="0" y="0" width="520" height="590" rx="14" fill="url(#mapGrid)" />
+                    <path class="india-outline" d="M190 28 L234 42 L260 82 L246 116 L291 136 L334 151 L392 148 L425 183 L392 213 L362 245 L345 282 L311 298 L285 325 L258 360 L244 413 L225 482 L200 545 L180 505 L175 456 L151 422 L136 373 L104 338 L83 290 L106 242 L122 195 L143 158 L154 112 L173 78 Z" />
+                    <path class="india-outline-detail" d="M291 136 L281 181 L312 210 L345 199 M154 112 L195 146 L194 207 L220 254 L196 307 L220 353 L210 410 M106 242 L155 263 L196 307 L258 360 M225 482 L199 460 L180 505" />
+                    <g id="mapMarkers" aria-live="polite"></g>
+                </svg>
+                <div class="map-legend" aria-label="Climate marker legend">
+                    <span><i class="map-legend-dot map-legend-green"></i> Normal</span>
+                    <span><i class="map-legend-dot map-legend-blue"></i> Rainfall</span>
+                    <span><i class="map-legend-dot map-legend-orange"></i> Heat</span>
+                    <span><i class="map-legend-dot map-legend-red"></i> Air quality</span>
+                </div>
+            </div>
+        </section>
+
+        <aside id="insightsPanel" class="glass-card map-insights-panel" aria-live="polite">
+            <div class="map-empty-state">
+                <div class="map-empty-icon">📍</div>
+                <h2 class="text-lg font-bold">Choose a state</h2>
+                <p class="text-sm">Click a state marker to view its connected weather and agricultural intelligence.</p>
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const states = {{ states | tojson }};
+    const markerLayer = document.getElementById('mapMarkers');
+    const mapStatus = document.getElementById('mapStatus');
+    const insightsPanel = document.getElementById('insightsPanel');
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const conditionIcons = {
+        'Sunny': '☀️', 'Partly Cloudy': '⛅', 'Cloudy': '☁️', 'Overcast': '🌥',
+        'Light Rain': '🌦', 'Heavy Rain': '🌧', 'Thunderstorm': '⛈', 'Haze': '🌫',
+        'Fog': '🌁', 'Clear': '🌙'
+    };
+
+    let selectedStateId = null;
+    let climateByState = {};
+
+    function createSvgElement(name, attributes = {}) {
+        const element = document.createElementNS(SVG_NS, name);
+        Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+        return element;
+    }
+
+    function projectState(state) {
+        return {
+            x: 84 + ((state.lng - 68) / 29) * 345,
+            y: 548 - ((state.lat - 8) / 28) * 500
+        };
+    }
+
+    function markerTone(climate) {
+        if (!climate) return 'green';
+        if (climate.aqi > 200) return 'red';
+        if (climate.temperature >= 36) return 'orange';
+        if (climate.rainfall >= 35) return 'blue';
+        return 'green';
+    }
+
+    function renderMarkers() {
+        markerLayer.replaceChildren();
+
+        states.forEach((state) => {
+            const point = projectState(state);
+            const climate = climateByState[state.id];
+            const marker = createSvgElement('g', {
+                class: `map-marker map-marker-${markerTone(climate)} ${selectedStateId === state.id ? 'is-selected' : ''}`,
+                transform: `translate(${point.x} ${point.y})`,
+                role: 'button',
+                tabindex: '0',
+                'aria-label': `View weather and agriculture details for ${state.name}`,
+                'aria-pressed': String(selectedStateId === state.id)
+            });
+
+            const title = createSvgElement('title');
+            title.textContent = `${state.name}${climate ? `: ${climate.temperature}°C, ${climate.condition}` : ''}`;
+            marker.appendChild(title);
+            marker.appendChild(createSvgElement('circle', { class: 'map-marker-pulse', r: '10' }));
+            marker.appendChild(createSvgElement('circle', { class: 'map-marker-dot', r: '5' }));
+
+            const label = createSvgElement('text', { class: 'map-marker-label', x: '9', y: '3' });
+            label.textContent = state.code;
+            marker.appendChild(label);
+
+            marker.addEventListener('click', () => selectState(state.id));
+            marker.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    selectState(state.id);
+                }
+            });
+            markerLayer.appendChild(marker);
+        });
+    }
+
+    function weatherCard(label, value, tone) {
+        return `
+            <div class="map-weather-card">
+                <span>${label}</span>
+                <strong class="${tone}">${value}</strong>
+            </div>
+        `;
+    }
+
+    function renderInsights(data) {
+        const { state, climate, agriculture } = data;
+        const conditionIcon = conditionIcons[climate.condition] || '🌤';
+        const crops = agriculture.recommendations.map((crop, index) => `
+            <li class="map-crop-row">
+                <span class="map-crop-rank">${index + 1}</span>
+                <span class="map-crop-name">${crop.crop}<small>${crop.season} · ${crop.expected_yield} ton/ha</small></span>
+                <strong>${crop.suitability}%</strong>
+            </li>
+        `).join('');
+
+        insightsPanel.innerHTML = `
+            <div class="map-insight-header">
+                <div>
+                    <p class="map-eyebrow">${state.region_type} INDIA · ${state.code}</p>
+                    <h2>${state.name}</h2>
+                    <p>${state.capital} · ${state.population.toLocaleString('en-IN')} people</p>
+                </div>
+                <span class="map-condition-icon" aria-label="${climate.condition}">${conditionIcon}</span>
+            </div>
+
+            <section class="map-insight-section">
+                <div class="map-section-label"><span>🌦</span> Weather now <span class="map-condition">${climate.condition}</span></div>
+                <div class="map-weather-grid">
+                    ${weatherCard('Temperature', `${climate.temperature}°C`, 'text-orange')}
+                    ${weatherCard('Humidity', `${climate.humidity}%`, 'text-cyan')}
+                    ${weatherCard('Rainfall', `${climate.rainfall} mm`, 'text-cyan')}
+                    ${weatherCard('Air quality', `${climate.aqi} AQI`, climate.aqi > 200 ? 'text-red' : 'text-green')}
+                </div>
+                <p class="map-weather-meta">Wind ${climate.wind_speed} km/h ${climate.wind_direction} · UV ${climate.uv_index} · Visibility ${climate.visibility} km</p>
+            </section>
+
+            <section class="map-insight-section map-agriculture-section">
+                <div class="map-section-label"><span>🌾</span> Agriculture connection</div>
+                <p class="map-soil-badge">Estimated dominant soil: <strong>${agriculture.soil_type}</strong></p>
+                <ol class="map-crop-list">${crops}</ol>
+                <div class="map-advisory"><span>🤖</span><p>${agriculture.advisory}</p></div>
+            </section>
+        `;
+    }
+
+    function renderLoading(state) {
+        insightsPanel.innerHTML = `
+            <div class="map-empty-state">
+                <div class="map-empty-icon">🛰</div>
+                <h2 class="text-lg font-bold">Loading ${state.name}</h2>
+                <p class="text-sm">Connecting weather and agriculture data…</p>
+            </div>
+        `;
+    }
+
+    function renderError(state) {
+        insightsPanel.innerHTML = `
+            <div class="map-empty-state">
+                <div class="map-empty-icon">⚠️</div>
+                <h2 class="text-lg font-bold">Unable to load ${state.name}</h2>
+                <p class="text-sm">Please select the state again to retry its intelligence feed.</p>
+            </div>
+        `;
+    }
+
+    async function selectState(stateId) {
+        const state = states.find((entry) => entry.id === stateId);
+        if (!state) return;
+
+        selectedStateId = stateId;
+        renderMarkers();
+        renderLoading(state);
+        mapStatus.textContent = `Loading ${state.code} details…`;
+
+        try {
+            const response = await fetch(`/api/map-insights?state_id=${stateId}`);
+            if (!response.ok) throw new Error('Unable to load map insights');
+            const data = await response.json();
+            climateByState[stateId] = data.climate;
+            renderMarkers();
+            renderInsights(data);
+            mapStatus.textContent = `${state.code} selected · weather + agriculture connected`;
+        } catch (error) {
+            renderError(state);
+            mapStatus.textContent = 'Connection unavailable — select a marker to retry';
+        }
+    }
+
+    async function initialiseMap() {
+        try {
+            const response = await fetch('/api/climate');
+            if (!response.ok) throw new Error('Unable to load climate layer');
+            const payload = await response.json();
+            climateByState = Object.fromEntries(payload.data.map((entry) => [entry.state.id, entry.climate]));
+            mapStatus.textContent = `${states.length} state markers ready`;
+        } catch (error) {
+            mapStatus.textContent = `${states.length} state markers ready · climate overlay unavailable`;
+        }
+
+        renderMarkers();
+        selectState(14);
+    }
+
+    initialiseMap();
+</script>
+{% endblock %}

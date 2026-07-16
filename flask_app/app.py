@@ -155,6 +155,11 @@ def create_app():
     def climate():
         """Climate monitoring page"""
         return render_template('climate.html', states=INDIA_STATES)
+
+    @app.route('/map')
+    def map_explorer():
+        """Interactive map linking climate and agriculture intelligence"""
+        return render_template('map.html', states=INDIA_STATES)
     
     @app.route('/agriculture')
     def agriculture():
@@ -372,6 +377,47 @@ def create_app():
             })
         
         return jsonify({"error": "Invalid section"}), 400
+
+    @app.route('/api/map-insights')
+    def api_map_insights():
+        """Return connected climate and agriculture insights for a map selection."""
+        state_id = request.args.get('state_id', type=int)
+        state = get_state_by_id(state_id) if state_id else None
+
+        if not state:
+            return jsonify({"error": "State not found"}), 404
+
+        soil_by_region = {
+            "North": "Alluvial",
+            "South": "Red",
+            "East": "Alluvial",
+            "West": "Black Cotton",
+            "Central": "Black Cotton",
+            "Northeast": "Laterite",
+        }
+        soil_type = soil_by_region.get(state["region_type"], "Alluvial")
+        climate = generate_climate_data(state_id)
+        recommendations = generate_crop_recommendations(soil_type, state_id)[:3]
+
+        if climate["rainfall"] >= 35:
+            advisory = "Rainfall is elevated. Clear field drainage and postpone fertilizer application until the soil drains."
+        elif climate["temperature"] >= 36:
+            advisory = "Heat stress is possible. Prioritize irrigation in the early morning and use mulch to retain moisture."
+        elif climate["humidity"] >= 75:
+            advisory = "High humidity can increase fungal disease pressure. Monitor crops and keep field rows well ventilated."
+        else:
+            advisory = "Conditions are broadly suitable for routine crop monitoring, irrigation scheduling, and pest scouting."
+
+        return jsonify({
+            "state": state,
+            "climate": climate,
+            "agriculture": {
+                "soil_type": soil_type,
+                "recommendations": recommendations,
+                "advisory": advisory,
+            },
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        })
     
     @app.route('/api/simulation', methods=['POST'])
     def api_simulation():
