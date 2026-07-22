@@ -6,7 +6,7 @@
     <div class="page-header flex justify-between items-center map-page-header">
         <div>
             <h1 class="page-title">🗺 2D Geospatial Intelligence Map</h1>
-            <p class="page-subtitle">Select a state to connect its weather conditions with crop and field advisories.</p>
+            <p class="page-subtitle" id="mapSubtitle">Select a state to connect its weather conditions with crop and field advisories.</p>
         </div>
         <div class="map-live-status"><span class="live-dot"></span> 2D MAP LAYER LIVE</div>
     </div>
@@ -68,6 +68,7 @@
     const conditionIcons = { Sunny: '☀️', 'Partly Cloudy': '⛅', Cloudy: '☁️', Overcast: '🌥', 'Light Rain': '🌦', 'Heavy Rain': '🌧', Thunderstorm: '⛈', Haze: '🌫', Fog: '🌁', Clear: '🌙' };
     let selectedStateId = null;
     let climateByState = {};
+    let gpsStateId = window.TwinAILocation?.get()?.state?.id || null;
 
     function svgElement(name, attributes = {}) {
         const element = document.createElementNS(SVG_NS, name);
@@ -160,9 +161,17 @@
             mapStatus.textContent = `${states.length} state markers ready · climate overlay unavailable`;
         }
         renderMarkers();
-        const defaultState = states.find((state) => state.id === 14) || states[0];
+        const defaultState = states.find((state) => state.id === gpsStateId) || states.find((state) => state.id === 14) || states[0];
         if (defaultState) selectState(defaultState.id);
     }
+
+    window.addEventListener('twinai:locationchange', (event) => {
+        const state = event.detail?.state;
+        if (!state || !states.some((entry) => entry.id === state.id)) return;
+        gpsStateId = state.id;
+        document.getElementById('mapSubtitle').textContent = `GPS-selected weather, air quality, crop suitability, and field advisories for ${state.name}.`;
+        selectState(state.id);
+    });
 
     initialiseMap();
 </script>

@@ -6,7 +6,7 @@
     <div class="page-header flex justify-between items-center">
         <div>
             <h1 class="page-title">Mission Control</h1>
-            <p class="page-subtitle">National Climate Intelligence Dashboard</p>
+            <p class="page-subtitle" id="dashboardSubtitle">National Climate Intelligence Dashboard</p>
         </div>
         <div class="flex items-center gap-4">
             <span class="text-xs" style="color: #64748b;" id="dateDisplay"></span>
@@ -40,22 +40,22 @@
         <div class="glass-card metric-card">
             <div class="metric-icon">🌡</div>
             <div class="metric-value text-orange" id="metricTemp">32.4<span class="metric-unit">°C</span></div>
-            <div class="metric-label">National Avg Temperature</div>
+            <div class="metric-label" id="metricTempLabel">National Avg Temperature</div>
         </div>
         <div class="glass-card metric-card">
             <div class="metric-icon">💧</div>
             <div class="metric-value text-cyan" id="metricHumidity">67<span class="metric-unit">%</span></div>
-            <div class="metric-label">Average Humidity</div>
+            <div class="metric-label" id="metricHumidityLabel">Average Humidity</div>
         </div>
         <div class="glass-card metric-card">
             <div class="metric-icon">🌧</div>
             <div class="metric-value text-cyan" id="metricRainfall">245.6<span class="metric-unit">mm</span></div>
-            <div class="metric-label">Total Rainfall</div>
+            <div class="metric-label" id="metricRainfallLabel">Total Rainfall</div>
         </div>
         <div class="glass-card metric-card">
             <div class="metric-icon">🌫</div>
             <div class="metric-value text-yellow" id="metricAqi">156<span class="metric-unit">AQI</span></div>
-            <div class="metric-label">Average AQI</div>
+            <div class="metric-label" id="metricAqiLabel">Average AQI</div>
         </div>
         <div class="glass-card metric-card">
             <div class="metric-icon">🗺</div>
@@ -267,6 +267,34 @@
         drawMiniChart('chartHumid', humidData, '#00ff88');
     }, 100);
 
+    let dashboardReady = false;
+    let pendingDashboardState = window.TwinAILocation?.get()?.state || null;
+
+    function applyLocalDashboard(state) {
+        if (!state) return;
+        if (!dashboardReady) {
+            pendingDashboardState = state;
+            return;
+        }
+        fetch(`/api/climate?state_id=${state.id}`)
+            .then((response) => {
+                if (!response.ok) throw new Error('Unable to load location climate');
+                return response.json();
+            })
+            .then((data) => {
+                const climate = data.climate;
+                document.getElementById('dashboardSubtitle').textContent = `GPS-selected climate and air-quality overview for ${state.name}`;
+                document.getElementById('metricTemp').innerHTML = climate.temperature + '<span class="metric-unit">°C</span>';
+                document.getElementById('metricHumidity').innerHTML = climate.humidity + '<span class="metric-unit">%</span>';
+                document.getElementById('metricRainfall').innerHTML = climate.rainfall + '<span class="metric-unit">mm</span>';
+                document.getElementById('metricAqi').innerHTML = climate.aqi + '<span class="metric-unit">AQI</span>';
+                document.getElementById('metricTempLabel').textContent = 'Local Temperature';
+                document.getElementById('metricHumidityLabel').textContent = 'Local Humidity';
+                document.getElementById('metricRainfallLabel').textContent = 'Local Rainfall';
+                document.getElementById('metricAqiLabel').textContent = 'Local Air Quality';
+            });
+    }
+
     // Load dashboard data
     fetch('/api/dashboard')
         .then(r => r.json())
@@ -288,6 +316,12 @@
                 </div>
             `).join('');
             document.getElementById('alertsList').innerHTML = alertsHtml;
+        })
+        .finally(() => {
+            dashboardReady = true;
+            if (pendingDashboardState) applyLocalDashboard(pendingDashboardState);
         });
+
+    window.addEventListener('twinai:locationchange', (event) => applyLocalDashboard(event.detail?.state));
 </script>
 {% endblock %}

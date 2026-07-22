@@ -6,7 +6,7 @@
     <div class="page-header flex justify-between items-center">
         <div>
             <h1 class="page-title">⚡ Disaster Management Center</h1>
-            <p class="page-subtitle">Real-time disaster monitoring, alerts & AI recommendations</p>
+            <p class="page-subtitle" id="disasterSubtitle">Real-time disaster monitoring, alerts & AI recommendations</p>
         </div>
         <div class="tabs" id="severityTabs">
             <button class="tab active" data-severity="all">All</button>
@@ -37,8 +37,10 @@
 {% block scripts %}
 <script>
     let alerts = [];
+    let allAlerts = [];
     let selectedAlert = null;
     let currentSeverity = 'all';
+    let selectedLocationName = window.TwinAILocation?.get()?.state?.name || null;
 
     const typeIcons = {cyclone:'🌀',flood:'🌊',drought:'☀️',heatwave:'🔥',heavy_rain:'🌧',forest_fire:'🔥',earthquake:'📳',thunderstorm:'⛈'};
 
@@ -53,6 +55,11 @@
 
     function renderAlerts() {
         const filtered = currentSeverity === 'all' ? alerts : alerts.filter(a => a.severity === currentSeverity);
+        if (!filtered.length) {
+            document.getElementById('alertsList').innerHTML = `<div class="glass-card p-5 text-sm" style="color:#94a3b8;">✅ No ${currentSeverity === 'all' ? 'active' : currentSeverity} alerts are currently listed${selectedLocationName ? ` for ${selectedLocationName}` : ''}.</div>`;
+            document.getElementById('detailPanel').innerHTML = `<div class="glass-card p-8 text-center"><div style="font-size:48px; margin-bottom:16px;">📍</div><p class="text-sm" style="color:#94a3b8;">Your GPS-selected area currently has no matching alerts.</p></div>`;
+            return;
+        }
         
         document.getElementById('alertsList').innerHTML = filtered.map(alert => `
             <div class="glass-card p-4 cursor-pointer ${selectedAlert?.id === alert.id ? 'glow-blue' : ''}" onclick="selectAlert(${alert.id})">
@@ -69,6 +76,18 @@
                 </div>
             </div>
         `).join('');
+    }
+
+    function applyAlertLocation(state) {
+        selectedLocationName = state?.name || null;
+        alerts = selectedLocationName ? allAlerts.filter((alert) => alert.state === selectedLocationName) : [...allAlerts];
+        selectedAlert = null;
+        document.getElementById('disasterSubtitle').textContent = selectedLocationName
+            ? `GPS-selected disaster monitoring and alerts for ${selectedLocationName}`
+            : 'Real-time disaster monitoring, alerts & AI recommendations';
+        renderStats();
+        renderAlerts();
+        if (alerts.length) selectAlert(alerts[0].id);
     }
 
     function selectAlert(id) {
@@ -132,10 +151,10 @@
     fetch('/api/alerts')
         .then(r => r.json())
         .then(data => {
-            alerts = data.alerts;
-            renderStats();
-            renderAlerts();
-            if (alerts.length > 0) selectAlert(alerts[0].id);
+            allAlerts = data.alerts;
+            applyAlertLocation(selectedLocationName ? { name: selectedLocationName } : null);
         });
+
+    window.addEventListener('twinai:locationchange', (event) => applyAlertLocation(event.detail?.state));
 </script>
 {% endblock %}

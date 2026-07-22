@@ -7,7 +7,7 @@
         <h1 class="text-3xl font-bold mb-2" style="color: #e2e8f0;">👤 Citizen Portal</h1>
         <p class="text-sm" style="color: #64748b;">Your personal climate safety & information hub</p>
         <div class="mt-3">
-            <select id="stateSelect" style="padding: 10px 16px; border-radius: 8px; background: var(--space-800); border: 1px solid var(--space-700); color: #e2e8f0; font-size: 14px;">
+            <select id="stateSelect" data-location-state style="padding: 10px 16px; border-radius: 8px; background: var(--space-800); border: 1px solid var(--space-700); color: #e2e8f0; font-size: 14px;">
                 {% for state in states %}
                 <option value="{{ state.id }}">{{ state.name }}</option>
                 {% endfor %}
@@ -17,14 +17,14 @@
 
     <!-- Current Weather -->
     <div class="glass-card p-6 mb-4 text-center">
-        <div style="font-size: 48px;">⛅</div>
-        <div class="text-4xl font-bold text-orange font-mono">32°C</div>
-        <div class="text-sm mt-1" style="color: #94a3b8;">Partly Cloudy • <span id="selectedCapital">Amaravati</span></div>
+        <div id="weatherIcon" style="font-size: 48px;">⛅</div>
+        <div class="text-4xl font-bold text-orange font-mono" id="currentTemperature">32°C</div>
+        <div class="text-sm mt-1" style="color: #94a3b8;"><span id="currentCondition">Partly Cloudy</span> • <span id="selectedCapital">Amaravati</span></div>
         <div class="grid grid-4 gap-3 mt-4">
-            <div class="text-center"><span style="font-size:18px;">💧</span><div class="text-xs font-mono" style="color:#e2e8f0;">67%</div><div class="text-xs" style="color:#475569;">Humidity</div></div>
-            <div class="text-center"><span style="font-size:18px;">💨</span><div class="text-xs font-mono" style="color:#e2e8f0;">12 km/h</div><div class="text-xs" style="color:#475569;">Wind</div></div>
-            <div class="text-center"><span style="font-size:18px;">🌧</span><div class="text-xs font-mono" style="color:#e2e8f0;">20%</div><div class="text-xs" style="color:#475569;">Rain Chance</div></div>
-            <div class="text-center"><span style="font-size:18px;">🌫</span><div class="text-xs font-mono" style="color:#e2e8f0;">142</div><div class="text-xs" style="color:#475569;">AQI</div></div>
+            <div class="text-center"><span style="font-size:18px;">💧</span><div class="text-xs font-mono" id="currentHumidity" style="color:#e2e8f0;">67%</div><div class="text-xs" style="color:#475569;">Humidity</div></div>
+            <div class="text-center"><span style="font-size:18px;">💨</span><div class="text-xs font-mono" id="currentWind" style="color:#e2e8f0;">12 km/h</div><div class="text-xs" style="color:#475569;">Wind</div></div>
+            <div class="text-center"><span style="font-size:18px;">🌧</span><div class="text-xs font-mono" id="currentRainfall" style="color:#e2e8f0;">20%</div><div class="text-xs" style="color:#475569;">Rainfall</div></div>
+            <div class="text-center"><span style="font-size:18px;">🌫</span><div class="text-xs font-mono" id="currentAqi" style="color:#e2e8f0;">142</div><div class="text-xs" style="color:#475569;">AQI</div></div>
         </div>
     </div>
 
@@ -91,34 +91,68 @@
 {% block scripts %}
 <script>
     const states = {{ states | tojson }};
+    const conditionIcons = { Sunny: '☀️', 'Partly Cloudy': '⛅', Cloudy: '☁️', Overcast: '🌥', 'Light Rain': '🌦', 'Heavy Rain': '🌧', Thunderstorm: '⛈', Haze: '🌫', Fog: '🌁', Clear: '🌙' };
+    let allAlerts = [];
 
-    document.getElementById('stateSelect').addEventListener('change', function() {
-        const state = states.find(s => s.id === parseInt(this.value));
-        if (state) {
-            document.getElementById('selectedCapital').textContent = state.capital;
+    function renderLocalAlerts(state) {
+        const localAlerts = allAlerts.filter((alert) => alert.state === state.name);
+        if (!localAlerts.length) {
+            document.getElementById('alertsSection').innerHTML = `<div class="glass-card p-4 text-xs" style="color:#94a3b8;">✅ No active alerts currently listed for ${state.name}.</div>`;
+            return;
         }
+        document.getElementById('alertsSection').innerHTML = `
+            <h2 class="text-sm font-bold text-red mb-3 flex items-center gap-2">
+                <span class="live-dot"></span> Active Alerts in ${state.name}
+            </h2>
+            <div class="space-y-2">
+                ${localAlerts.slice(0, 3).map(a => `
+                    <div class="glass-card p-4" style="border-left: 4px solid ${a.severity === 'critical' ? '#ff3333' : '#ff8800'};">
+                        <div class="text-sm font-bold" style="color: #e2e8f0;">${a.title}</div>
+                        <div class="text-xs mt-1" style="color: #94a3b8;">${a.description}</div>
+                        <div class="text-xs mt-2" style="color: #64748b;">📍 ${a.state}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    function updateCitizenLocation() {
+        const state = states.find((entry) => entry.id === Number(document.getElementById('stateSelect').value));
+        if (!state) return;
+        document.getElementById('selectedCapital').textContent = state.capital;
+        renderLocalAlerts(state);
+        fetch(`/api/climate?state_id=${state.id}`)
+            .then((response) => response.json())
+            .then((data) => {
+                const climate = data.climate;
+                document.getElementById('weatherIcon').textContent = conditionIcons[climate.condition] || '🌤';
+                document.getElementById('currentTemperature').textContent = `${climate.temperature}°C`;
+                document.getElementById('currentCondition').textContent = climate.condition;
+                document.getElementById('currentHumidity').textContent = `${climate.humidity}%`;
+                document.getElementById('currentWind').textContent = `${climate.wind_speed} km/h`;
+                document.getElementById('currentRainfall').textContent = `${climate.rainfall} mm`;
+                document.getElementById('currentAqi').textContent = climate.aqi;
+            });
+    }
+
+    document.getElementById('stateSelect').addEventListener('change', updateCitizenLocation);
+    window.addEventListener('twinai:locationchange', (event) => {
+        const state = event.detail?.state;
+        if (!state) return;
+        document.getElementById('stateSelect').value = String(state.id);
+        updateCitizenLocation();
     });
 
     // Load alerts
     fetch('/api/alerts')
         .then(r => r.json())
         .then(data => {
-            if (data.alerts.length > 0) {
-                document.getElementById('alertsSection').innerHTML = `
-                    <h2 class="text-sm font-bold text-red mb-3 flex items-center gap-2">
-                        <span class="live-dot"></span> Active Alerts in Your Area
-                    </h2>
-                    <div class="space-y-2">
-                        ${data.alerts.slice(0, 3).map(a => `
-                            <div class="glass-card p-4" style="border-left: 4px solid ${a.severity === 'critical' ? '#ff3333' : '#ff8800'};">
-                                <div class="text-sm font-bold" style="color: #e2e8f0;">${a.title}</div>
-                                <div class="text-xs mt-1" style="color: #94a3b8;">${a.description}</div>
-                                <div class="text-xs mt-2" style="color: #64748b;">📍 ${a.state}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            }
+            allAlerts = data.alerts;
+            updateCitizenLocation();
         });
+
+    const storedLocation = window.TwinAILocation?.get();
+    if (storedLocation?.state) document.getElementById('stateSelect').value = String(storedLocation.state.id);
+    updateCitizenLocation();
 </script>
 {% endblock %}

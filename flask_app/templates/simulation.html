@@ -42,7 +42,7 @@
                 <div class="space-y-4">
                     <div>
                         <label class="text-xs" style="color: #94a3b8;">State</label>
-                        <select id="stateSelect" class="w-full mt-1">
+                        <select id="stateSelect" data-location-state class="w-full mt-1">
                             {% for state in states %}
                             <option value="{{ state.id }}">{{ state.name }}</option>
                             {% endfor %}

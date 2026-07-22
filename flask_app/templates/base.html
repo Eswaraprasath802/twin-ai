@@ -78,6 +78,9 @@
             <div class="nav-status">
                 <span class="nav-badge">🛰 14 Satellites</span>
                 <span class="nav-badge">🤖 23 AI Models</span>
+                <button type="button" class="theme-toggle nav-theme-toggle gps-location-button" data-use-location aria-label="Use my GPS location">
+                    <span>📍</span><span data-gps-label>Use GPS</span>
+                </button>
                 {% if current_user %}
                 <span class="nav-badge">👤 {{ current_user.name }}</span>
                 {% endif %}

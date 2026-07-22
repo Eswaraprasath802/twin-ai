@@ -6,7 +6,7 @@
     <div class="page-header flex justify-between items-center">
         <div>
             <h1 class="page-title">🌡 Climate Monitor</h1>
-            <p class="page-subtitle">Real-time climate data across all Indian states</p>
+            <p class="page-subtitle" id="climateSubtitle">Real-time climate data across all Indian states</p>
         </div>
         <div class="tabs" id="regionTabs">
             <button class="tab active" data-region="all">All India</button>
@@ -42,6 +42,7 @@
     let climateData = [];
     let selectedState = null;
     let currentRegion = 'all';
+    let preferredStateId = window.TwinAILocation?.get()?.state?.id || null;
 
     const conditionIcons = {
         'Sunny': '☀️', 'Partly Cloudy': '⛅', 'Cloudy': '☁️', 'Overcast': '🌥',
@@ -137,6 +138,14 @@
         renderStates();
     }
 
+    function selectGpsState(stateId, stateName) {
+        preferredStateId = stateId;
+        currentRegion = 'all';
+        document.querySelectorAll('#regionTabs .tab').forEach((tab) => tab.classList.toggle('active', tab.dataset.region === 'all'));
+        document.getElementById('climateSubtitle').textContent = `GPS-selected climate and air-quality data for ${stateName}`;
+        if (climateData.length) selectState(stateId);
+    }
+
     // Region tabs
     document.querySelectorAll('#regionTabs .tab').forEach(tab => {
         tab.addEventListener('click', () => {
@@ -153,6 +162,15 @@
         .then(data => {
             climateData = data.data;
             renderStates();
+            if (preferredStateId) {
+                const state = states.find((entry) => entry.id === preferredStateId);
+                if (state) selectGpsState(state.id, state.name);
+            }
         });
+
+    window.addEventListener('twinai:locationchange', (event) => {
+        const state = event.detail?.state;
+        if (state) selectGpsState(state.id, state.name);
+    });
 </script>
 {% endblock %}

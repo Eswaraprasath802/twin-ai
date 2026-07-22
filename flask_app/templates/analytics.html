@@ -106,6 +106,8 @@
     let activeClimate = null;
     let activeState = null;
     let climateByState = {};
+    let nationalAnalyticsLoaded = false;
+    let pendingLocationState = null;
 
     const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
     const average = (items, key) => items.reduce((total, item) => total + Number(item[key] || 0), 0) / Math.max(items.length, 1);
@@ -149,16 +151,6 @@
                 context.fillText(`${value}${suffix}`, x + barWidth / 2, Math.max(11, y - 4));
             }
         });
-    }
-
-    function closestState(latitude, longitude) {
-        const toRadians = (value) => value * Math.PI / 180;
-        return states.reduce((nearest, state) => {
-            const latDifference = toRadians(state.lat - latitude);
-            const lonDifference = toRadians(state.lng - longitude);
-            const distance = 2 * 6371 * Math.asin(Math.sqrt(Math.sin(latDifference / 2) ** 2 + Math.cos(toRadians(latitude)) * Math.cos(toRadians(state.lat)) * Math.sin(lonDifference / 2) ** 2));
-            return !nearest || distance < nearest.distance ? { state, distance } : nearest;
-        }, null);
     }
 
     function makeSeries(climate) {
@@ -227,6 +219,12 @@
         climateByState = Object.fromEntries(payload.data.map((entry) => [entry.state.id, entry.climate]));
         const measurements = payload.data.map((entry) => entry.climate);
         updateDashboard({ temperature: Number(average(measurements, 'temperature').toFixed(1)), humidity: Math.round(average(measurements, 'humidity')), rainfall: Number(average(measurements, 'rainfall').toFixed(1)), aqi: Math.round(average(measurements, 'aqi')) });
+        nationalAnalyticsLoaded = true;
+        if (pendingLocationState) {
+            const state = pendingLocationState;
+            pendingLocationState = null;
+            loadStateAnalytics(state, `Showing GPS-based insights for ${state.name}`);
+        }
     }
 
     async function loadStateAnalytics(state, label) {
@@ -240,23 +238,23 @@
         updateDashboard(payload.climate, state);
     }
 
-    function requestLocation() {
-        if (!navigator.geolocation) {
-            document.getElementById('locationLabel').textContent = 'Location is not supported — using India-wide overview';
+    function applyGpsAnalytics(state) {
+        const supportedState = states.find((entry) => entry.id === state?.id);
+        if (!supportedState) return;
+        if (!nationalAnalyticsLoaded) {
+            pendingLocationState = supportedState;
             return;
         }
-        document.getElementById('locationLabel').textContent = 'Requesting your location…';
-        navigator.geolocation.getCurrentPosition(async (position) => {
-            const nearest = closestState(position.coords.latitude, position.coords.longitude);
-            if (!nearest) return;
-            try {
-                await loadStateAnalytics(nearest.state, `Showing insights for ${nearest.state.name}`);
-            } catch (error) {
-                document.getElementById('locationLabel').textContent = 'Could not load local data — using India-wide overview';
-            }
-        }, () => {
-            document.getElementById('locationLabel').textContent = 'Location permission not granted — using India-wide overview';
-        }, { enableHighAccuracy: false, maximumAge: 300000, timeout: 10000 });
+        loadStateAnalytics(supportedState, `Showing GPS-based insights for ${supportedState.name}`);
+    }
+
+    function requestLocation() {
+        if (!window.TwinAILocation) {
+            document.getElementById('locationLabel').textContent = 'GPS is unavailable — using India-wide overview';
+            return;
+        }
+        document.getElementById('locationLabel').textContent = 'Requesting GPS location…';
+        window.TwinAILocation.request();
     }
 
     document.getElementById('useLocation').addEventListener('click', requestLocation);
@@ -268,9 +266,13 @@
         });
     });
     window.addEventListener('resize', () => { if (activeClimate) updateDashboard(activeClimate, activeState); });
+    window.addEventListener('twinai:locationchange', (event) => applyGpsAnalytics(event.detail?.state));
+    window.addEventListener('twinai:locationerror', () => {
+        document.getElementById('locationLabel').textContent = 'GPS permission not granted — using India-wide overview';
+    });
 
     loadNationalAnalytics().catch(() => {
         document.getElementById('locationLabel').textContent = 'Analytics data is unavailable';
-    }).finally(requestLocation);
+    });
 </script>
 {% endblock %}

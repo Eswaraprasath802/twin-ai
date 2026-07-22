@@ -6,9 +6,9 @@
     <div class="page-header flex justify-between items-center">
         <div>
             <h1 class="page-title">🌾 Smart Agriculture</h1>
-            <p class="page-subtitle">AI-powered crop advisory and agricultural intelligence</p>
+            <p class="page-subtitle" id="agricultureSubtitle">AI-powered crop advisory and agricultural intelligence</p>
         </div>
-        <select id="stateSelect" class="btn-sm" style="background: var(--space-800); border: 1px solid var(--space-700); color: #e2e8f0;">
+        <select id="stateSelect" data-location-state class="btn-sm" style="background: var(--space-800); border: 1px solid var(--space-700); color: #e2e8f0;">
             {% for state in states %}
             <option value="{{ state.id }}">{{ state.name }}</option>
             {% endfor %}
@@ -100,6 +100,7 @@
 {% block scripts %}
 <script>
     const crops = {{ crops | tojson }};
+    const states = {{ states | tojson }};
     let selectedSoil = 'Alluvial';
 
     // Tab switching
@@ -162,6 +163,28 @@
                 `).join('');
             });
     }
+
+    function updateAgricultureLocation() {
+        const state = states.find((entry) => entry.id === Number(document.getElementById('stateSelect').value));
+        if (!state) return;
+        document.getElementById('agricultureSubtitle').textContent = `GPS and state-aware crop advisory for ${state.name}`;
+        loadRecommendations();
+    }
+
+    document.getElementById('stateSelect').addEventListener('change', updateAgricultureLocation);
+    window.addEventListener('twinai:locationchange', (event) => {
+        const state = event.detail?.state;
+        if (state) {
+            document.getElementById('stateSelect').value = String(state.id);
+            updateAgricultureLocation();
+        }
+    });
+
+    const storedLocation = window.TwinAILocation?.get();
+    if (storedLocation?.state) {
+        document.getElementById('stateSelect').value = String(storedLocation.state.id);
+    }
+    updateAgricultureLocation();
 
     function loadSchemes() {
         fetch('/api/agriculture?section=schemes')

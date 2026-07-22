@@ -342,6 +342,26 @@ a:hover { text-decoration: underline; }
     margin-left: 4px;
 }
 
+.gps-location-button {
+    max-width: 175px;
+}
+
+.gps-location-button [data-gps-label] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gps-location-button.is-active {
+    border-color: rgba(0, 255, 136, 0.42);
+    color: #087a57;
+}
+
+.gps-location-button:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
 .theme-toggle-float {
     position: absolute;
     top: 24px;
@@ -686,6 +706,9 @@ a:hover { text-decoration: underline; }
     .auth-panel,
     .auth-form-panel { padding: 24px; }
     .mobile-auth-links { display: none; }
+    .nav-status { gap: 4px; margin-left: auto; }
+    .nav-status > .nav-badge { display: none; }
+    .gps-location-button { max-width: 138px; padding: 7px 9px; }
 }
 
 /* ─── Metric Cards ─── */

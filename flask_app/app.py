@@ -6,6 +6,7 @@ Main application entry point
 import os
 import re
 import sys
+from math import asin, cos, radians, sin, sqrt
 from urllib.parse import urljoin, urlparse
 
 # When Apache/mod_wsgi executes this file as the WSGI script, it does not
@@ -32,6 +33,24 @@ from data import (
 
 
 EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+
+def nearest_indian_state(latitude, longitude):
+    """Return the supported state nearest to a browser-provided GPS point."""
+    latitude_radians = radians(latitude)
+    longitude_radians = radians(longitude)
+    nearest = None
+
+    for state in INDIA_STATES:
+        latitude_delta = radians(state["lat"]) - latitude_radians
+        longitude_delta = radians(state["lng"]) - longitude_radians
+        haversine = sin(latitude_delta / 2) ** 2 + cos(latitude_radians) * cos(radians(state["lat"])) * sin(longitude_delta / 2) ** 2
+        distance_km = 2 * 6371 * asin(sqrt(haversine))
+
+        if nearest is None or distance_km < nearest[1]:
+            nearest = (state, distance_km)
+
+    return nearest
 
 
 def create_app():
@@ -303,6 +322,33 @@ def create_app():
     def api_states():
         """Get all states"""
         return jsonify({"states": INDIA_STATES})
+
+    @app.route('/api/location-context')
+    def api_location_context():
+        """Resolve browser GPS coordinates to the nearest supported Indian state.
+
+        Coordinates are used only to select a state for this response; they are
+        not written to the database or session.
+        """
+        try:
+            latitude = float(request.args.get("latitude", ""))
+            longitude = float(request.args.get("longitude", ""))
+        except (TypeError, ValueError):
+            return jsonify({"error": "Valid latitude and longitude are required"}), 400
+
+        if not -90 <= latitude <= 90 or not -180 <= longitude <= 180:
+            return jsonify({"error": "Coordinates are out of range"}), 400
+
+        nearest = nearest_indian_state(latitude, longitude)
+        if nearest is None:
+            return jsonify({"error": "No supported state found"}), 404
+
+        state, distance_km = nearest
+        return jsonify({
+            "state": state,
+            "distance_km": round(distance_km, 1),
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        })
     
     @app.route('/api/climate')
     def api_climate():
