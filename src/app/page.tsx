@@ -3,9 +3,10 @@
  * TWIN AI — Combined Landing Page
  * Shows both Next.js and Flask options
  */
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createParticleStyles } from "@/lib/deterministic";
+import IndiaGlobe from "@/components/IndiaGlobe";
 
 const PARTICLE_STYLES = createParticleStyles(40);
 
@@ -19,93 +20,6 @@ function Particles() {
   );
 }
 
-function AnimatedEarth() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const w = 400, h = 400;
-    canvas.width = w;
-    canvas.height = h;
-    const cx = w / 2, cy = h / 2, r = 150;
-    let angle = 0;
-
-    const indiaCoords = [
-      [77, 28.6], [72.8, 19], [80.2, 13], [88.4, 22.6], [75.8, 26.9],
-      [78.5, 17.4], [76.6, 12], [85.8, 20.3], [73.9, 15.5], [82, 25],
-    ];
-
-    function draw() {
-      if (!ctx) return;
-      ctx.clearRect(0, 0, w, h);
-
-      const glow = ctx.createRadialGradient(cx, cy, r - 20, cx, cy, r + 60);
-      glow.addColorStop(0, "rgba(0,212,255,0.08)");
-      glow.addColorStop(1, "transparent");
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, w, h);
-
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      const grad = ctx.createRadialGradient(cx - 30, cy - 30, 10, cx, cy, r);
-      grad.addColorStop(0, "#0a2a4a");
-      grad.addColorStop(1, "#020a14");
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      ctx.strokeStyle = "rgba(0,212,255,0.06)";
-      ctx.lineWidth = 0.5;
-      for (let lat = -80; lat <= 80; lat += 20) {
-        const y = cy + r * Math.sin((lat * Math.PI) / 180);
-        const latR = r * Math.cos((lat * Math.PI) / 180);
-        if (latR > 0) {
-          ctx.beginPath();
-          ctx.ellipse(cx, y, latR, latR * 0.15, 0, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-      }
-
-      ctx.fillStyle = "#00ff88";
-      ctx.shadowColor = "#00ff88";
-      ctx.shadowBlur = 6;
-      indiaCoords.forEach(([lon, lat]) => {
-        const rotLon = (lon - 78 + angle) * Math.PI / 180;
-        const latRad = lat * Math.PI / 180;
-        const x = cx + r * Math.cos(latRad) * Math.sin(rotLon);
-        const y = cy - r * Math.sin(latRad);
-        const z = Math.cos(latRad) * Math.cos(rotLon);
-        if (z > 0) {
-          ctx.beginPath();
-          ctx.arc(x, y, 2 + z * 2, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      });
-      ctx.shadowBlur = 0;
-
-      ctx.beginPath();
-      ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(0,212,255,0.15)";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      angle += 0.1;
-      frameId = requestAnimationFrame(draw);
-    }
-
-    let frameId = requestAnimationFrame(draw);
-
-    return () => {
-      cancelAnimationFrame(frameId);
-    };
-  }, []);
-
-  return <canvas ref={canvasRef} className="w-80 h-80" />;
-}
-
 export default function HomePage() {
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
@@ -114,7 +28,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="theme-shell relative overflow-hidden">
+    <div className="theme-shell landing-depth relative overflow-hidden">
       <style jsx global>{`
         @keyframes float {
           0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
@@ -226,23 +140,25 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className={`transition-all duration-1000 delay-500 ${loaded ? "opacity-100 scale-100" : "opacity-0 scale-90"}`}>
-            <AnimatedEarth />
+          <div className={`earth-entrance transition-all duration-1000 delay-500 ${loaded ? "opacity-100 scale-100" : "opacity-0 scale-90"}`}>
+            <IndiaGlobe />
           </div>
         </div>
 
         <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mt-12 w-full transition-all duration-1000 delay-700 ${loaded ? "opacity-100" : "opacity-0"}`}>
           {[
-            { icon: "🌍", title: "3D Digital Twin", desc: "Live 3D India globe visualization" },
-            { icon: "🤖", title: "AI Predictions", desc: "ML-powered climate forecasts" },
-            { icon: "⚡", title: "Smart Alerts", desc: "AI-generated recommendations" },
-            { icon: "🔬", title: "Simulation", desc: "Climate scenario modeling" },
+            { icon: "🌍", title: "3D Digital Twin", desc: "Live India globe: terrain, buildings & weather", href: "/digital-twin" },
+            { icon: "🤖", title: "AI Predictions", desc: "ML-powered climate, crop yield & risk predictions", href: "/analytics" },
+            { icon: "⚡", title: "Smart Alerts", desc: "Real-time warnings with AI action recommendations", href: "/disaster" },
+            { icon: "🔬", title: "Simulation Engine", desc: "Simulate climate scenarios and predict impact", href: "/simulation" },
           ].map((f, i) => (
-            <div key={i} className="glass-card p-4 text-center">
-              <div className="text-2xl mb-2">{f.icon}</div>
-              <div className="text-xs font-semibold text-slate-200">{f.title}</div>
-              <div className="text-[10px] text-slate-500">{f.desc}</div>
-            </div>
+            <Link key={i} href={f.href} className="glass-card landing-3d-card landing-feature-card p-4 text-center">
+              <div className="landing-3d-card-content">
+                <div className="text-2xl mb-2">{f.icon}</div>
+                <div className="text-xs font-semibold text-slate-200">{f.title}</div>
+                <div className="text-[10px] text-slate-500">{f.desc}</div>
+              </div>
+            </Link>
           ))}
         </div>
 
@@ -255,9 +171,11 @@ export default function HomePage() {
             { icon: "📊", label: "Analytics", href: "/analytics" },
             { icon: "👤", label: "Citizen", href: "/citizen" },
           ].map((m, i) => (
-            <Link key={i} href={m.href} className="glass-card p-3 text-center hover:border-[#00d4ff]/30 transition-all group">
-              <div className="text-xl group-hover:scale-110 transition-transform">{m.icon}</div>
-              <div className="text-[10px] text-slate-400 group-hover:text-[#00d4ff]">{m.label}</div>
+            <Link key={i} href={m.href} className="glass-card landing-3d-card p-3 text-center hover:border-[#00d4ff]/30 transition-all group">
+              <div className="landing-3d-card-content">
+                <div className="text-xl group-hover:scale-110 transition-transform">{m.icon}</div>
+                <div className="text-[10px] text-slate-400 group-hover:text-[#00d4ff]">{m.label}</div>
+              </div>
             </Link>
           ))}
         </div>
