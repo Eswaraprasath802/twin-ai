@@ -721,7 +721,7 @@ a:hover { text-decoration: underline; }
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    color: var(--cyber-green);
+    color: #087a57;
     font-family: 'SF Mono', Monaco, monospace;
     font-size: 11px;
     letter-spacing: 0.04em;
@@ -749,10 +749,10 @@ a:hover { text-decoration: underline; }
 .map-toolbar p { color: var(--text-soft); }
 
 .map-selection-count {
-    background: rgba(0, 212, 255, 0.08);
-    border: 1px solid rgba(0, 212, 255, 0.18);
+    background: #e0f5fb;
+    border: 1px solid #79bbd0;
     border-radius: 999px;
-    color: var(--cyber-blue);
+    color: #075f80;
     font-family: 'SF Mono', Monaco, monospace;
     font-size: 10px;
     padding: 6px 9px;
@@ -760,10 +760,53 @@ a:hover { text-decoration: underline; }
     white-space: nowrap;
 }
 
+/* The default cyan is intentionally bright for dark mode, but does not have
+   enough contrast on this page's light cards. */
+html:not([data-theme="dark"]) .map-toolbar p,
+html:not([data-theme="dark"]) .map-insight-header p:not(.map-eyebrow),
+html:not([data-theme="dark"]) .map-weather-card span,
+html:not([data-theme="dark"]) .map-weather-meta,
+html:not([data-theme="dark"]) .map-condition,
+html:not([data-theme="dark"]) .map-crop-name small {
+    color: #475569;
+}
+
+html:not([data-theme="dark"]) .map-eyebrow,
+html:not([data-theme="dark"]) .map-crop-rank,
+html:not([data-theme="dark"]) .map-weather-card .text-cyan {
+    color: #076f95;
+}
+
+html:not([data-theme="dark"]) .map-weather-card .text-green,
+html:not([data-theme="dark"]) .map-soil-badge strong,
+html:not([data-theme="dark"]) .map-crop-row strong {
+    color: #08734f;
+}
+
+html:not([data-theme="dark"]) .map-weather-card .text-orange { color: #a84d00; }
+html:not([data-theme="dark"]) .map-weather-card .text-red { color: #bf1d3d; }
+
+html[data-theme="dark"] .map-live-status { color: var(--cyber-green); }
+html[data-theme="dark"] .map-selection-count {
+    background: rgba(0, 212, 255, 0.08);
+    border-color: rgba(0, 212, 255, 0.18);
+    color: var(--cyber-blue);
+}
+
+html[data-theme="dark"] .map-canvas {
+    background:
+        radial-gradient(circle at 51% 38%, rgba(0, 212, 255, 0.24), transparent 48%),
+        linear-gradient(145deg, #082c43 0%, #0a3e58 55%, #083f43 100%);
+}
+
+html[data-theme="dark"] .map-grid { color: #66dcff; opacity: 0.5; }
+html[data-theme="dark"] .india-outline { filter: drop-shadow(0 0 18px rgba(0, 212, 255, 0.4)); stroke: #b8f5ff; }
+html[data-theme="dark"] .india-outline-detail { stroke: #7ce7ff; }
+
 .map-canvas {
     background:
-        radial-gradient(circle at 53% 42%, rgba(0, 212, 255, 0.1), transparent 39%),
-        linear-gradient(135deg, rgba(15, 23, 42, 0.03), rgba(0, 212, 255, 0.03));
+        radial-gradient(circle at 51% 38%, rgba(0, 212, 255, 0.42), transparent 48%),
+        linear-gradient(145deg, #e3f9ff 0%, #c6f1ff 55%, #e0fff3 100%);
     min-height: 590px;
     overflow: hidden;
     padding: 10px;
@@ -780,25 +823,26 @@ a:hover { text-decoration: underline; }
     width: 100%;
 }
 
-.map-grid { color: var(--cyber-blue); }
+.map-grid { color: #0085b8; opacity: 0.74; }
 
 .india-outline {
     fill: url(#indiaFill);
-    stroke: rgba(0, 212, 255, 0.62);
+    filter: drop-shadow(0 8px 13px rgba(0, 139, 190, 0.3));
+    stroke: #007aa9;
     stroke-linejoin: round;
-    stroke-width: 2;
+    stroke-width: 2.4;
 }
 
 .india-outline-detail {
     fill: none;
-    opacity: 0.5;
-    stroke: rgba(0, 212, 255, 0.34);
+    opacity: 0.84;
+    stroke: #00648d;
     stroke-dasharray: 4 5;
     stroke-linecap: round;
     stroke-width: 1;
 }
 
-.map-marker { cursor: pointer; outline: none; }
+.map-marker { cursor: pointer; filter: drop-shadow(0 4px 4px rgba(0, 9, 26, 0.34)); outline: none; }
 .map-marker-pulse { fill: currentColor; opacity: 0; transform-origin: center; }
 .map-marker-dot { fill: currentColor; stroke: var(--space-950); stroke-width: 2; }
 .map-marker-label {
@@ -836,6 +880,7 @@ a:hover { text-decoration: underline; }
 .map-legend {
     align-items: center;
     background: var(--glass);
+    background: color-mix(in srgb, var(--glass) 90%, transparent);
     border: 1px solid var(--card-border);
     border-radius: 8px;
     bottom: 18px;
@@ -847,6 +892,7 @@ a:hover { text-decoration: underline; }
     left: 18px;
     padding: 8px 10px;
     position: absolute;
+    z-index: 5;
 }
 
 .map-legend span { align-items: center; display: inline-flex; gap: 5px; }
@@ -988,6 +1034,7 @@ a:hover { text-decoration: underline; }
     .map-selection-count { white-space: normal; }
     .map-canvas { min-height: 500px; }
     .state-map { height: 480px; width: 110%; margin-left: -5%; }
+    .map-legend { max-width: 240px; }
     .map-legend { bottom: 12px; left: 12px; }
     .map-marker-label { font-size: 8px; }
 }

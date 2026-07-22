@@ -194,6 +194,9 @@
             position: relative;
             width: 400px;
             height: 400px;
+            isolation: isolate;
+            perspective: 1200px;
+            animation: earthFloat 7s ease-in-out infinite;
         }
         
         @media (min-width: 768px) {
@@ -204,16 +207,102 @@
         }
         
         #earthCanvas {
+            position: absolute;
+            inset: 0;
             width: 100%;
             height: 100%;
+            z-index: 1;
+            filter: drop-shadow(0 28px 24px rgba(0, 20, 45, 0.28));
+            transform: translateZ(28px) rotateX(3deg) rotateY(-6deg);
+        }
+
+        .earth-container::before {
+            content: '';
+            position: absolute;
+            inset: 14%;
+            z-index: -1;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.18), rgba(0, 212, 255, 0.05) 48%, transparent 70%);
+            filter: blur(18px);
+            transform: scale(1.55);
+        }
+
+        .earth-orbit {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            z-index: 2;
+            border: 1px solid rgba(107, 231, 255, 0.42);
+            border-radius: 50%;
+            pointer-events: none;
+            transform-style: preserve-3d;
+        }
+
+        .earth-orbit-primary {
+            width: 106%;
+            height: 38%;
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.15), inset 0 0 12px rgba(0, 212, 255, 0.08);
+            animation: orbitSweep 9s linear infinite;
+        }
+
+        .earth-orbit-secondary {
+            width: 91%;
+            height: 44%;
+            border-color: rgba(0, 255, 157, 0.32);
+            animation: orbitSweepReverse 12s linear infinite;
+        }
+
+        .earth-hud {
+            position: absolute;
+            z-index: 3;
+            padding: 7px 10px;
+            border: 1px solid rgba(122, 234, 255, 0.22);
+            border-radius: 999px;
+            background: rgba(3, 20, 44, 0.74);
+            color: #a9f4ff;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.13em;
+            line-height: 1;
+            box-shadow: 0 8px 20px rgba(0, 10, 30, 0.26);
+            backdrop-filter: blur(8px);
+        }
+
+        .earth-hud-top { top: 14%; left: 3%; }
+        .earth-hud-bottom { right: 4%; bottom: 16%; color: #a9ffd7; border-color: rgba(0, 255, 157, 0.24); }
+
+        .earth-hud-dot {
+            display: inline-block;
+            width: 5px;
+            height: 5px;
+            margin: 0 6px 1px 0;
+            border-radius: 50%;
+            background: #00ff9d;
+            box-shadow: 0 0 8px #00ff9d;
         }
         
         .earth-data-point {
             position: absolute;
+            z-index: 4;
             padding: 8px 12px;
             border-radius: 8px;
             font-size: 11px;
             animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes earthFloat {
+            0%, 100% { transform: translateY(0) rotateX(0deg) rotateY(0deg); }
+            50% { transform: translateY(-10px) rotateX(2deg) rotateY(-3deg); }
+        }
+
+        @keyframes orbitSweep {
+            from { transform: translate(-50%, -50%) rotateX(68deg) rotateZ(-16deg) translateZ(44px); }
+            to { transform: translate(-50%, -50%) rotateX(68deg) rotateZ(344deg) translateZ(44px); }
+        }
+
+        @keyframes orbitSweepReverse {
+            from { transform: translate(-50%, -50%) rotateX(56deg) rotateZ(49deg) translateZ(6px); }
+            to { transform: translate(-50%, -50%) rotateX(56deg) rotateZ(-311deg) translateZ(6px); }
         }
         
         .features-grid {
@@ -230,9 +319,17 @@
         }
         
         .feature-card {
+            display: block;
             padding: 20px;
+            min-height: 138px;
             text-align: center;
+            color: inherit;
+            text-decoration: none;
+            cursor: pointer;
         }
+
+        .feature-card:hover { text-decoration: none; }
+        .feature-card:focus-visible { outline: 2px solid var(--cyber-blue); outline-offset: 3px; }
         
         .feature-icon {
             font-size: 32px;
@@ -365,6 +462,10 @@
                 
                 <!-- Earth Canvas -->
                 <div class="earth-container fade-in-up" style="animation-delay: 0.5s">
+                    <div class="earth-orbit earth-orbit-primary"></div>
+                    <div class="earth-orbit earth-orbit-secondary"></div>
+                    <div class="earth-hud earth-hud-top"><span class="earth-hud-dot"></span>LIVE SIGNAL</div>
+                    <div class="earth-hud earth-hud-bottom">INDIA / 23.6° N</div>
                     <canvas id="earthCanvas"></canvas>
                     <div class="earth-data-point glass-card" style="top: 20px; right: 0;">
                         <div class="text-cyan font-mono">🌡 32.4°C</div>
@@ -383,26 +484,26 @@
             
             <!-- Features -->
             <div class="features-grid fade-in-up" style="animation-delay: 0.7s">
-                <div class="feature-card glass-card">
-                    <div class="feature-icon">🌍</div>
-                    <div class="feature-title">3D Digital Twin</div>
-                    <div class="feature-desc">Live 3D India globe with terrain, buildings, weather visualization</div>
-                </div>
-                <div class="feature-card glass-card">
+                <a href="{{ url_for('map_explorer') }}" class="feature-card glass-card" aria-label="Open map">
+                    <div class="feature-icon">🗺️</div>
+                    <div class="feature-title">Map</div>
+                    <div class="feature-desc">Explore India&apos;s climate, state, and agriculture intelligence</div>
+                </a>
+                <a href="{{ url_for('analytics') }}" class="feature-card glass-card" aria-label="Open AI Predictions analytics">
                     <div class="feature-icon">🤖</div>
                     <div class="feature-title">AI Predictions</div>
                     <div class="feature-desc">ML-powered climate, crop yield, disaster risk predictions</div>
-                </div>
-                <div class="feature-card glass-card">
+                </a>
+                <a href="{{ url_for('disaster') }}" class="feature-card glass-card" aria-label="Open Smart Alerts">
                     <div class="feature-icon">⚡</div>
                     <div class="feature-title">Smart Alerts</div>
                     <div class="feature-desc">Real-time warnings with AI-generated action recommendations</div>
-                </div>
-                <div class="feature-card glass-card">
+                </a>
+                <a href="{{ url_for('simulation') }}" class="feature-card glass-card" aria-label="Open Simulation Engine">
                     <div class="feature-icon">🔬</div>
                     <div class="feature-title">Simulation Engine</div>
                     <div class="feature-desc">Simulate climate scenarios and predict impact instantly</div>
-                </div>
+                </a>
             </div>
             
             <!-- Module Links -->
@@ -478,121 +579,230 @@
             particles.appendChild(p);
         }
         
-        // Earth Canvas
+        // World / India Digital Twin canvas
         const canvas = document.getElementById('earthCanvas');
         const ctx = canvas.getContext('2d');
-        const w = 500, h = 500;
-        canvas.width = w;
-        canvas.height = h;
-        
-        const cx = w / 2, cy = h / 2, r = 180;
-        let angle = 0;
-        
-        const indiaCoords = [
-            [77, 28.6], [72.8, 19], [80.2, 13], [88.4, 22.6], [75.8, 26.9],
-            [78.5, 17.4], [76.6, 12], [85.8, 20.3], [73.9, 15.5], [82, 25],
-            [91.8, 26.2], [79, 21.1], [74, 22.3], [83, 17], [77, 11]
-        ];
-        
-        function draw() {
-            ctx.clearRect(0, 0, w, h);
-            
-            // Glow
-            const glow = ctx.createRadialGradient(cx, cy, r - 20, cx, cy, r + 80);
-            glow.addColorStop(0, 'rgba(0,212,255,0.08)');
-            glow.addColorStop(0.5, 'rgba(0,212,255,0.03)');
-            glow.addColorStop(1, 'transparent');
-            ctx.fillStyle = glow;
-            ctx.fillRect(0, 0, w, h);
-            
-            // Globe
-            ctx.beginPath();
-            ctx.arc(cx, cy, r, 0, Math.PI * 2);
-            const grad = ctx.createRadialGradient(cx - 40, cy - 40, 10, cx, cy, r);
-            grad.addColorStop(0, '#0a2a4a');
-            grad.addColorStop(0.5, '#061428');
-            grad.addColorStop(1, '#020a14');
-            ctx.fillStyle = grad;
-            ctx.fill();
-            
-            // Grid
-            ctx.strokeStyle = 'rgba(0,212,255,0.08)';
-            ctx.lineWidth = 0.5;
-            
-            for (let lat = -80; lat <= 80; lat += 20) {
-                const y = cy + r * Math.sin(lat * Math.PI / 180);
-                const latR = r * Math.cos(lat * Math.PI / 180);
-                if (latR > 0) {
+
+        if (ctx) {
+            const w = 520;
+            const h = 520;
+            const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = w * pixelRatio;
+            canvas.height = h * pixelRatio;
+            ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+            const cx = w / 2;
+            const cy = h / 2;
+            const r = 178;
+            let angle = 0;
+
+            const landMasses = [
+                { points: [[-168, 70], [-150, 72], [-130, 62], [-124, 50], [-118, 42], [-122, 32], [-112, 25], [-101, 20], [-90, 18], [-83, 24], [-81, 33], [-74, 42], [-66, 49], [-72, 58], [-95, 64], [-122, 70]], color: '#179d82' },
+                { points: [[-81, 12], [-75, 5], [-72, -7], [-65, -17], [-62, -31], [-58, -43], [-52, -54], [-46, -51], [-40, -35], [-37, -15], [-45, -3], [-55, 6], [-67, 10]], color: '#18a36f' },
+                { points: [[-10, 36], [0, 44], [13, 52], [28, 58], [41, 54], [45, 43], [34, 36], [22, 37], [11, 42], [2, 40]], color: '#4ac36f' },
+                { points: [[-17, 35], [-6, 36], [8, 33], [18, 23], [24, 10], [29, -5], [23, -22], [15, -34], [5, -35], [-3, -18], [-9, 2], [-16, 19]], color: '#17a782' },
+                { points: [[35, 32], [47, 34], [58, 29], [57, 19], [48, 13], [40, 17]], color: '#3bb875' },
+                { points: [[46, 54], [65, 60], [91, 61], [113, 54], [132, 50], [147, 55], [157, 48], [148, 36], [130, 31], [113, 24], [94, 29], [77, 35], [61, 38], [49, 41]], color: '#43bd72' },
+                { points: [[94, 29], [104, 22], [110, 13], [107, 3], [101, 1], [96, 8], [91, 20]], color: '#24ad75' },
+                { points: [[110, -11], [123, -16], [135, -12], [145, -20], [151, -32], [146, -40], [132, -43], [117, -36], [112, -25]], color: '#199878' },
+                { points: [[130, 33], [137, 37], [143, 43], [145, 37], [140, 32], [135, 30]], color: '#62d47e' },
+                { points: [[-54, 60], [-41, 62], [-30, 70], [-35, 80], [-48, 82], [-58, 73]], color: '#6bc990' }
+            ];
+            const indiaOutline = [[68, 23], [69, 25], [70, 27], [72, 28], [73, 31], [75, 32], [77, 35], [79, 34], [80, 31], [82, 30], [84, 28], [86, 27], [88, 28], [89, 27], [91, 27], [92, 26], [91, 24], [89, 23], [88, 21], [86, 20], [84, 19], [83, 17], [82, 16], [81, 13], [80, 10], [78, 8], [77, 9], [76, 12], [75, 15], [73, 17], [72, 20], [70, 21]];
+            const terrainRidges = [
+                [[73, 30], [76, 31], [79, 30], [82, 29], [85, 28], [88, 27]],
+                [[72, 25], [75, 24], [78, 25], [81, 24], [84, 23], [87, 22]],
+                [[75, 19], [78, 20], [81, 19], [84, 20]]
+            ];
+            const cityPoints = [[77.2, 28.6, 4], [72.8, 19, 3], [77.6, 13, 3], [88.4, 22.6, 3], [78.5, 17.4, 2], [80.3, 13.1, 2], [85.8, 20.3, 2], [73.9, 15.5, 2], [76.8, 30.7, 2], [91.7, 26.1, 2], [75.8, 26.9, 2], [82, 25, 2]];
+            const weatherCells = [[73, 19, 20, 'rgba(0, 205, 255, 0.42)'], [80, 16, 24, 'rgba(38, 130, 255, 0.34)'], [87, 23, 17, 'rgba(255, 180, 0, 0.42)'], [77, 28, 15, 'rgba(255, 104, 58, 0.32)'], [90, 20, 18, 'rgba(100, 229, 255, 0.34)']];
+
+            function project(longitude, latitude) {
+                const longitudeRadians = ((longitude - 78) * Math.PI / 180) + angle;
+                const latitudeRadians = latitude * Math.PI / 180;
+                const cosLatitude = Math.cos(latitudeRadians);
+                return {
+                    x: cx + r * cosLatitude * Math.sin(longitudeRadians),
+                    y: cy - r * Math.sin(latitudeRadians),
+                    z: cosLatitude * Math.cos(longitudeRadians)
+                };
+            }
+
+            function drawPath(points, closePath = false) {
+                const projected = points.map(([longitude, latitude]) => project(longitude, latitude));
+                if (projected.some(point => point.z <= 0.02)) return false;
+                ctx.beginPath();
+                projected.forEach((point, index) => {
+                    if (index === 0) ctx.moveTo(point.x, point.y);
+                    else ctx.lineTo(point.x, point.y);
+                });
+                if (closePath) ctx.closePath();
+                return true;
+            }
+
+            function drawGrid() {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.strokeStyle = 'rgba(159, 238, 255, 0.15)';
+                ctx.lineWidth = 0.8;
+
+                for (let latitude = -60; latitude <= 60; latitude += 20) {
                     ctx.beginPath();
-                    ctx.ellipse(cx, y, latR, latR * 0.15, 0, 0, Math.PI * 2);
+                    let drawing = false;
+                    for (let longitude = -180; longitude <= 180; longitude += 3) {
+                        const point = project(longitude, latitude);
+                        if (point.z >= -0.03) {
+                            if (!drawing) ctx.moveTo(point.x, point.y);
+                            else ctx.lineTo(point.x, point.y);
+                            drawing = true;
+                        } else drawing = false;
+                    }
+                    ctx.stroke();
+                }
+
+                for (let longitude = -160; longitude <= 160; longitude += 20) {
+                    ctx.beginPath();
+                    let drawing = false;
+                    for (let latitude = -85; latitude <= 85; latitude += 3) {
+                        const point = project(longitude, latitude);
+                        if (point.z >= -0.03) {
+                            if (!drawing) ctx.moveTo(point.x, point.y);
+                            else ctx.lineTo(point.x, point.y);
+                            drawing = true;
+                        } else drawing = false;
+                    }
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            function drawLandMasses() {
+                landMasses.forEach(({ points, color }) => {
+                    if (!drawPath(points, true)) return;
+                    ctx.fillStyle = color;
+                    ctx.globalAlpha = 0.78;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    ctx.strokeStyle = 'rgba(194, 255, 222, 0.42)';
+                    ctx.lineWidth = 0.8;
+                    ctx.stroke();
+                });
+
+                if (drawPath(indiaOutline, true)) {
+                    const indiaLand = ctx.createLinearGradient(cx - 90, cy - 75, cx + 100, cy + 110);
+                    indiaLand.addColorStop(0, 'rgba(118, 255, 166, 0.96)');
+                    indiaLand.addColorStop(0.55, 'rgba(25, 190, 125, 0.92)');
+                    indiaLand.addColorStop(1, 'rgba(8, 125, 178, 0.9)');
+                    ctx.fillStyle = indiaLand;
+                    ctx.shadowColor = '#00ffad';
+                    ctx.shadowBlur = 18;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.strokeStyle = 'rgba(218, 255, 233, 0.95)';
+                    ctx.lineWidth = 1.35;
                     ctx.stroke();
                 }
             }
-            
-            for (let lon = 0; lon < 180; lon += 30) {
-                ctx.beginPath();
-                const rotLon = lon + angle;
-                for (let lat = -90; lat <= 90; lat += 2) {
-                    const x = cx + r * Math.cos(lat * Math.PI / 180) * Math.sin(rotLon * Math.PI / 180);
-                    const y = cy - r * Math.sin(lat * Math.PI / 180);
-                    const z = Math.cos(lat * Math.PI / 180) * Math.cos(rotLon * Math.PI / 180);
-                    if (z > 0) {
-                        if (lat === -90) ctx.moveTo(x, y);
-                        else ctx.lineTo(x, y);
-                    }
-                }
-                ctx.stroke();
+
+            function drawTerrain() {
+                ctx.strokeStyle = 'rgba(227, 255, 202, 0.64)';
+                ctx.lineWidth = 1;
+                terrainRidges.forEach(ridge => {
+                    if (drawPath(ridge)) ctx.stroke();
+                });
             }
-            
-            // India points
-            ctx.fillStyle = '#00ff88';
-            ctx.shadowColor = '#00ff88';
-            ctx.shadowBlur = 8;
-            indiaCoords.forEach(([lon, lat]) => {
-                const rotLon = (lon - 78 + angle) * Math.PI / 180;
-                const latRad = lat * Math.PI / 180;
-                const x = cx + r * Math.cos(latRad) * Math.sin(rotLon);
-                const y = cy - r * Math.sin(latRad);
-                const z = Math.cos(latRad) * Math.cos(rotLon);
-                if (z > 0) {
+
+            function drawWeather() {
+                weatherCells.forEach(([longitude, latitude, cellRadius, color], index) => {
+                    const point = project(longitude, latitude);
+                    if (point.z <= 0.08) return;
+                    const animatedRadius = cellRadius * point.z * (0.82 + Math.sin(angle * 4 + index) * 0.12);
+                    const weather = ctx.createRadialGradient(point.x, point.y, 2, point.x, point.y, animatedRadius);
+                    weather.addColorStop(0, color);
+                    weather.addColorStop(0.55, color.replace(/0\.\d+\)$/, '0.16)'));
+                    weather.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                    ctx.fillStyle = weather;
                     ctx.beginPath();
-                    ctx.arc(x, y, 2.5 + z * 2, 0, Math.PI * 2);
+                    ctx.arc(point.x, point.y, animatedRadius, 0, Math.PI * 2);
                     ctx.fill();
-                }
-            });
-            ctx.shadowBlur = 0;
-            
-            // Atmosphere
-            ctx.beginPath();
-            ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(0,212,255,0.15)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            
-            // Satellite
-            const satAngle = angle * 3 * Math.PI / 180;
-            const satX = cx + (r + 30) * Math.cos(satAngle);
-            const satY = cy + (r + 30) * Math.sin(satAngle) * 0.3;
-            ctx.fillStyle = '#ffd700';
-            ctx.shadowColor = '#ffd700';
-            ctx.shadowBlur = 10;
-            ctx.beginPath();
-            ctx.arc(satX, satY, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            
-            // Orbit
-            ctx.strokeStyle = 'rgba(255,215,0,0.1)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.ellipse(cx, cy, r + 30, (r + 30) * 0.3, 0, 0, Math.PI * 2);
-            ctx.stroke();
-            
-            angle += 0.15;
-            requestAnimationFrame(draw);
+                });
+            }
+
+            function drawCitiesAndBuildings() {
+                cityPoints.forEach(([longitude, latitude, size]) => {
+                    const point = project(longitude, latitude);
+                    if (point.z <= 0.1) return;
+                    const buildingWidth = Math.max(1.5, size * point.z * 0.9);
+                    const buildingHeight = Math.max(3, size * point.z * 3.3);
+                    ctx.fillStyle = 'rgba(207, 255, 244, 0.9)';
+                    ctx.shadowColor = '#00ffc6';
+                    ctx.shadowBlur = 10;
+                    ctx.fillRect(point.x - buildingWidth / 2, point.y - buildingHeight, buildingWidth, buildingHeight);
+                    ctx.fillStyle = '#e1fffb';
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y - buildingHeight, buildingWidth * 0.75, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.shadowBlur = 0;
+            }
+
+            function drawSatellite() {
+                const satelliteAngle = angle * 3.2;
+                const satelliteX = cx + (r + 32) * Math.cos(satelliteAngle);
+                const satelliteY = cy + (r + 32) * Math.sin(satelliteAngle) * 0.28;
+                ctx.fillStyle = '#d9ffff';
+                ctx.shadowColor = '#00d4ff';
+                ctx.shadowBlur = 12;
+                ctx.beginPath();
+                ctx.arc(satelliteX, satelliteY, 3.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, w, h);
+
+                const halo = ctx.createRadialGradient(cx, cy, r - 30, cx, cy, r + 108);
+                halo.addColorStop(0, 'rgba(0, 212, 255, 0.18)');
+                halo.addColorStop(0.55, 'rgba(0, 122, 255, 0.08)');
+                halo.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = halo;
+                ctx.fillRect(0, 0, w, h);
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                const ocean = ctx.createRadialGradient(cx - 74, cy - 84, 12, cx, cy, r);
+                ocean.addColorStop(0, '#3399c6');
+                ocean.addColorStop(0.43, '#0d5b90');
+                ocean.addColorStop(0.78, '#063056');
+                ocean.addColorStop(1, '#01152d');
+                ctx.fillStyle = ocean;
+                ctx.shadowColor = 'rgba(0, 212, 255, 0.62)';
+                ctx.shadowBlur = 38;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                drawGrid();
+                drawLandMasses();
+                drawTerrain();
+                drawWeather();
+                drawCitiesAndBuildings();
+                drawSatellite();
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(148, 238, 255, 0.72)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                angle += 0.0032;
+                requestAnimationFrame(draw);
+            }
+
+            draw();
         }
-        
-        draw();
     </script>
 </body>
 </html>
