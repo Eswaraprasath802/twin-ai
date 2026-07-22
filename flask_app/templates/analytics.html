@@ -1,87 +1,96 @@
 {% extends "base.html" %}
 {% block title %}Analytics{% endblock %}
 
+{% block head %}
+<style>
+    .analytics-header { align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+    .analytics-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+    .analytics-location {
+        align-items: center;
+        background: var(--badge-bg);
+        border: 1px solid var(--badge-border);
+        border-radius: 999px;
+        color: var(--text-muted);
+        display: inline-flex;
+        font-size: 11px;
+        gap: 7px;
+        max-width: 270px;
+        padding: 7px 10px;
+    }
+    .analytics-location span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .analytics-location-dot { background: var(--cyber-blue); border-radius: 50%; box-shadow: 0 0 8px rgba(0, 212, 255, 0.72); height: 7px; min-width: 7px; }
+    .analytics-location-dot.is-live { background: var(--cyber-green); box-shadow: 0 0 8px rgba(0, 255, 136, 0.72); }
+    .analytics-location-button { background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.28); border-radius: 8px; color: var(--cyber-blue); cursor: pointer; font-size: 11px; font-weight: 700; padding: 8px 10px; }
+    .analytics-location-button:hover { background: rgba(0, 212, 255, 0.17); }
+    .analytics-card-title { color: var(--text-primary); }
+    .analytics-chart { min-width: 0; overflow: hidden; }
+    .analytics-chart canvas { display: block; height: 132px; max-width: 100%; width: 100%; }
+    .analytics-indicators { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .analytics-ranking-row { min-width: 0; }
+    .analytics-ranking-state { flex: 1; min-width: 0; }
+
+    @media (max-width: 768px) {
+        .analytics-actions { justify-content: flex-start; width: 100%; }
+        .analytics-indicators { gap: 28px 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 560px) {
+        .analytics-location { max-width: calc(100vw - 48px); }
+        .analytics-actions .tabs { order: 3; width: 100%; }
+        .analytics-actions .tab { flex: 1; min-width: 48px; }
+        .analytics-chart canvas { height: 118px; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="page-container">
-    <div class="page-header flex justify-between items-center">
+<div class="page-container analytics-page">
+    <div class="page-header flex justify-between items-center analytics-header">
         <div>
             <h1 class="page-title">📊 Analytics Center</h1>
-            <p class="page-subtitle">Comprehensive climate and agricultural data analytics</p>
+            <p class="page-subtitle" id="analyticsSubtitle">India-wide climate and agricultural analytics</p>
         </div>
-        <div class="tabs" id="periodTabs">
-            <button class="tab" data-period="7d">7d</button>
-            <button class="tab active" data-period="30d">30d</button>
-            <button class="tab" data-period="90d">90d</button>
-            <button class="tab" data-period="1y">1y</button>
-            <button class="tab" data-period="5y">5y</button>
+        <div class="analytics-actions">
+            <div class="analytics-location" aria-live="polite">
+                <span class="analytics-location-dot" id="locationDot"></span>
+                <span id="locationLabel">Using India-wide overview</span>
+            </div>
+            <button type="button" class="analytics-location-button" id="useLocation">⌖ Use my location</button>
+            <div class="tabs" id="periodTabs" aria-label="Analytics period">
+                <button class="tab" data-period="7d">7d</button>
+                <button class="tab active" data-period="30d">30d</button>
+                <button class="tab" data-period="90d">90d</button>
+                <button class="tab" data-period="1y">1y</button>
+                <button class="tab" data-period="5y">5y</button>
+            </div>
         </div>
     </div>
 
-    <!-- Summary -->
     <div class="grid grid-4 mb-4">
-        <div class="glass-card p-4"><div class="flex items-center gap-2 mb-2"><span>📈</span><span class="text-xs" style="color:#64748b;">Data Points Analyzed</span></div><div class="text-2xl font-bold text-cyan font-mono">2.4M</div></div>
-        <div class="glass-card p-4"><div class="flex items-center gap-2 mb-2"><span>🤖</span><span class="text-xs" style="color:#64748b;">AI Models Active</span></div><div class="text-2xl font-bold text-purple font-mono">23</div></div>
-        <div class="glass-card p-4"><div class="flex items-center gap-2 mb-2"><span>🎯</span><span class="text-xs" style="color:#64748b;">Prediction Accuracy</span></div><div class="text-2xl font-bold text-green font-mono">89.2%</div></div>
-        <div class="glass-card p-4"><div class="flex items-center gap-2 mb-2"><span>📄</span><span class="text-xs" style="color:#64748b;">Reports Generated</span></div><div class="text-2xl font-bold text-orange font-mono">1,247</div></div>
+        <div class="glass-card p-4"><div class="flex items-center gap-2 mb-2"><span>🌡</span><span class="text-xs theme-subtitle">Current Temperature</span></div><div class="text-2xl font-bold text-orange font-mono" id="summaryTemperature">--</div></div>
+        <div class="glass-card p-4"><div class="flex items-center gap-2 mb-2"><span>💧</span><span class="text-xs theme-subtitle">Relative Humidity</span></div><div class="text-2xl font-bold text-cyan font-mono" id="summaryHumidity">--</div></div>
+        <div class="glass-card p-4"><div class="flex items-center gap-2 mb-2"><span>🌧</span><span class="text-xs theme-subtitle">Recent Rainfall</span></div><div class="text-2xl font-bold text-green font-mono" id="summaryRainfall">--</div></div>
+        <div class="glass-card p-4"><div class="flex items-center gap-2 mb-2"><span>🌫</span><span class="text-xs theme-subtitle">Air Quality Index</span></div><div class="text-2xl font-bold text-purple font-mono" id="summaryAqi">--</div></div>
     </div>
 
-    <!-- Charts -->
     <div class="grid grid-3 mb-4">
-        <div class="glass-card p-5">
-            <h3 class="text-sm font-bold mb-4" style="color: #e2e8f0;">🌡 Monthly Temperature</h3>
-            <canvas id="chartTemp" height="120"></canvas>
-        </div>
-        <div class="glass-card p-5">
-            <h3 class="text-sm font-bold mb-4" style="color: #e2e8f0;">🌧 Monthly Rainfall (mm)</h3>
-            <canvas id="chartRain" height="120"></canvas>
-        </div>
-        <div class="glass-card p-5">
-            <h3 class="text-sm font-bold mb-4" style="color: #e2e8f0;">🌫 Monthly AQI</h3>
-            <canvas id="chartAqi" height="120"></canvas>
-        </div>
+        <div class="glass-card p-5 analytics-chart"><h3 class="text-sm font-bold mb-4 analytics-card-title">🌡 <span id="temperatureChartTitle">Temperature trend</span></h3><canvas id="chartTemp"></canvas></div>
+        <div class="glass-card p-5 analytics-chart"><h3 class="text-sm font-bold mb-4 analytics-card-title">🌧 <span id="rainfallChartTitle">Rainfall trend</span></h3><canvas id="chartRain"></canvas></div>
+        <div class="glass-card p-5 analytics-chart"><h3 class="text-sm font-bold mb-4 analytics-card-title">🌫 <span id="aqiChartTitle">Air quality trend</span></h3><canvas id="chartAqi"></canvas></div>
     </div>
 
-    <!-- Bottom -->
     <div class="grid grid-2 gap-4">
         <div class="glass-card p-5">
-            <h3 class="text-sm font-bold mb-4" style="color: #e2e8f0;">National Indicators</h3>
-            <div class="grid grid-4 gap-4">
-                <div class="text-center">
-                    <svg width="80" height="80" viewBox="0 0 80 80" class="mx-auto">
-                        <circle cx="40" cy="40" r="35" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="6"/>
-                        <circle cx="40" cy="40" r="35" fill="none" stroke="#00d4ff" stroke-width="6" stroke-dasharray="220" stroke-dashoffset="48" transform="rotate(-90 40 40)" stroke-linecap="round"/>
-                    </svg>
-                    <div class="text-lg font-bold text-cyan font-mono" style="margin-top:-50px;">78%</div>
-                    <div class="text-xs mt-8" style="color: #64748b;">Water Level</div>
-                </div>
-                <div class="text-center">
-                    <svg width="80" height="80" viewBox="0 0 80 80" class="mx-auto">
-                        <circle cx="40" cy="40" r="35" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="6"/>
-                        <circle cx="40" cy="40" r="35" fill="none" stroke="#00ff88" stroke-width="6" stroke-dasharray="220" stroke-dashoffset="73" transform="rotate(-90 40 40)" stroke-linecap="round"/>
-                    </svg>
-                    <div class="text-lg font-bold text-green font-mono" style="margin-top:-50px;">67%</div>
-                    <div class="text-xs mt-8" style="color: #64748b;">Crop Health</div>
-                </div>
-                <div class="text-center">
-                    <svg width="80" height="80" viewBox="0 0 80 80" class="mx-auto">
-                        <circle cx="40" cy="40" r="35" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="6"/>
-                        <circle cx="40" cy="40" r="35" fill="none" stroke="#ff8800" stroke-width="6" stroke-dasharray="220" stroke-dashoffset="121" transform="rotate(-90 40 40)" stroke-linecap="round"/>
-                    </svg>
-                    <div class="text-lg font-bold text-orange font-mono" style="margin-top:-50px;">45%</div>
-                    <div class="text-xs mt-8" style="color: #64748b;">Forest Cover</div>
-                </div>
-                <div class="text-center">
-                    <svg width="80" height="80" viewBox="0 0 80 80" class="mx-auto">
-                        <circle cx="40" cy="40" r="35" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="6"/>
-                        <circle cx="40" cy="40" r="35" fill="none" stroke="#8b5cf6" stroke-width="6" stroke-dasharray="220" stroke-dashoffset="40" transform="rotate(-90 40 40)" stroke-linecap="round"/>
-                    </svg>
-                    <div class="text-lg font-bold text-purple font-mono" style="margin-top:-50px;">82%</div>
-                    <div class="text-xs mt-8" style="color: #64748b;">Soil Health</div>
-                </div>
+            <h3 class="text-sm font-bold mb-4 analytics-card-title" id="indicatorTitle">India-wide indicators</h3>
+            <div class="grid analytics-indicators">
+                <div class="text-center"><svg width="80" height="80" viewBox="0 0 80 80" class="mx-auto"><circle cx="40" cy="40" r="35" fill="none" stroke="var(--badge-border)" stroke-width="6"/><circle id="waterRing" cx="40" cy="40" r="35" fill="none" stroke="#00d4ff" stroke-width="6" stroke-dasharray="220" stroke-dashoffset="48" transform="rotate(-90 40 40)" stroke-linecap="round"/></svg><div class="text-lg font-bold text-cyan font-mono" id="waterValue" style="margin-top:-50px;">--</div><div class="text-xs mt-8 theme-subtitle">Water Level</div></div>
+                <div class="text-center"><svg width="80" height="80" viewBox="0 0 80 80" class="mx-auto"><circle cx="40" cy="40" r="35" fill="none" stroke="var(--badge-border)" stroke-width="6"/><circle id="cropRing" cx="40" cy="40" r="35" fill="none" stroke="#00ff88" stroke-width="6" stroke-dasharray="220" stroke-dashoffset="73" transform="rotate(-90 40 40)" stroke-linecap="round"/></svg><div class="text-lg font-bold text-green font-mono" id="cropValue" style="margin-top:-50px;">--</div><div class="text-xs mt-8 theme-subtitle">Crop Health</div></div>
+                <div class="text-center"><svg width="80" height="80" viewBox="0 0 80 80" class="mx-auto"><circle cx="40" cy="40" r="35" fill="none" stroke="var(--badge-border)" stroke-width="6"/><circle id="heatRing" cx="40" cy="40" r="35" fill="none" stroke="#ff8800" stroke-width="6" stroke-dasharray="220" stroke-dashoffset="121" transform="rotate(-90 40 40)" stroke-linecap="round"/></svg><div class="text-lg font-bold text-orange font-mono" id="heatValue" style="margin-top:-50px;">--</div><div class="text-xs mt-8 theme-subtitle">Heat Comfort</div></div>
+                <div class="text-center"><svg width="80" height="80" viewBox="0 0 80 80" class="mx-auto"><circle cx="40" cy="40" r="35" fill="none" stroke="var(--badge-border)" stroke-width="6"/><circle id="airRing" cx="40" cy="40" r="35" fill="none" stroke="#8b5cf6" stroke-width="6" stroke-dasharray="220" stroke-dashoffset="40" transform="rotate(-90 40 40)" stroke-linecap="round"/></svg><div class="text-lg font-bold text-purple font-mono" id="airValue" style="margin-top:-50px;">--</div><div class="text-xs mt-8 theme-subtitle">Air Quality</div></div>
             </div>
         </div>
         <div class="glass-card p-5">
-            <h3 class="text-sm font-bold mb-4" style="color: #e2e8f0;">Top States by Climate Resilience</h3>
+            <h3 class="text-sm font-bold mb-4 analytics-card-title" id="rankingTitle">Top States by Climate Resilience</h3>
             <div class="space-y-2" id="stateRankings"></div>
         </div>
     </div>
@@ -91,64 +100,177 @@
 {% block scripts %}
 <script>
     const states = {{ states | tojson }};
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const periodLabels = { '7d': '7-day', '30d': '30-day', '90d': '90-day', '1y': '1-year', '5y': '5-year' };
+    let activePeriod = '30d';
+    let activeClimate = null;
+    let activeState = null;
+    let climateByState = {};
 
-    function drawBarChart(canvasId, data, color) {
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+    const average = (items, key) => items.reduce((total, item) => total + Number(item[key] || 0), 0) / Math.max(items.length, 1);
+
+    function drawBarChart(canvasId, data, color, suffix = '') {
         const canvas = document.getElementById(canvasId);
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        const w = canvas.width = canvas.offsetWidth * 2;
-        const h = canvas.height = 120 * 2;
-        ctx.scale(2, 2);
-        
-        const max = Math.max(...data);
-        const barWidth = (w / 2 - 20) / data.length - 4;
-        
-        data.forEach((v, i) => {
-            const barHeight = (v / max) * 90;
-            const x = 10 + i * (barWidth + 4);
-            const y = 100 - barHeight;
-            
-            const grad = ctx.createLinearGradient(0, y, 0, 100);
-            grad.addColorStop(0, color + '88');
-            grad.addColorStop(1, color + '33');
-            ctx.fillStyle = grad;
-            ctx.fillRect(x, y, barWidth, barHeight);
-            
-            ctx.strokeStyle = color + '44';
-            ctx.strokeRect(x, y, barWidth, barHeight);
-            
-            ctx.fillStyle = '#475569';
-            ctx.font = '8px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(months[i], x + barWidth/2, 112);
-            
-            ctx.fillStyle = '#64748b';
-            ctx.fillText(v, x + barWidth/2, y - 4);
+        const context = canvas?.getContext('2d');
+        if (!context) return;
+        const width = Math.max(canvas.clientWidth, 220);
+        const height = canvas.clientHeight || 132;
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(width * ratio);
+        canvas.height = Math.round(height * ratio);
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        context.clearRect(0, 0, width, height);
+
+        const baseline = height - 24;
+        const max = Math.max(...data, 1);
+        const barWidth = Math.max(4, (width - 20) / data.length - 4);
+        const showEveryLabel = width < 340 ? 2 : 1;
+        data.forEach((value, index) => {
+            const barHeight = (value / max) * (baseline - 16);
+            const x = 10 + index * (barWidth + 4);
+            const y = baseline - barHeight;
+            const gradient = context.createLinearGradient(0, y, 0, baseline);
+            gradient.addColorStop(0, `${color}cc`);
+            gradient.addColorStop(1, `${color}40`);
+            context.fillStyle = gradient;
+            context.fillRect(x, y, barWidth, barHeight);
+            context.strokeStyle = `${color}66`;
+            context.strokeRect(x, y, barWidth, barHeight);
+            if (index % showEveryLabel === 0) {
+                context.fillStyle = '#64748b';
+                context.font = '9px sans-serif';
+                context.textAlign = 'center';
+                context.fillText(monthLabels[index], x + barWidth / 2, height - 7);
+            }
+            if (barWidth >= 12) {
+                context.fillStyle = '#475569';
+                context.font = '9px sans-serif';
+                context.fillText(`${value}${suffix}`, x + barWidth / 2, Math.max(11, y - 4));
+            }
         });
     }
 
-    const tempData = months.map(() => Math.round(22 + Math.random() * 18));
-    const rainData = months.map(() => Math.round(Math.random() * 300));
-    const aqiData = months.map(() => Math.round(50 + Math.random() * 250));
+    function closestState(latitude, longitude) {
+        const toRadians = (value) => value * Math.PI / 180;
+        return states.reduce((nearest, state) => {
+            const latDifference = toRadians(state.lat - latitude);
+            const lonDifference = toRadians(state.lng - longitude);
+            const distance = 2 * 6371 * Math.asin(Math.sqrt(Math.sin(latDifference / 2) ** 2 + Math.cos(toRadians(latitude)) * Math.cos(toRadians(state.lat)) * Math.sin(lonDifference / 2) ** 2));
+            return !nearest || distance < nearest.distance ? { state, distance } : nearest;
+        }, null);
+    }
 
-    setTimeout(() => {
-        drawBarChart('chartTemp', tempData, '#ff8800');
-        drawBarChart('chartRain', rainData, '#00d4ff');
-        drawBarChart('chartAqi', aqiData, '#ffd700');
-    }, 100);
+    function makeSeries(climate) {
+        const intensity = { '7d': 0.55, '30d': 0.75, '90d': 1, '1y': 1.25, '5y': 1.45 }[activePeriod];
+        return {
+            temperature: monthLabels.map((_, index) => Math.round(clamp(climate.temperature + Math.sin(index * 0.58) * 6 * intensity - 2, 12, 48))),
+            rainfall: monthLabels.map((_, index) => Math.round(clamp(climate.rainfall * (0.55 + (Math.sin(index * 0.58 - 1) + 1) * intensity), 0, 380))),
+            aqi: monthLabels.map((_, index) => Math.round(clamp(climate.aqi + Math.cos(index * 0.72) * 34 * intensity, 25, 400)))
+        };
+    }
 
-    // State rankings
-    document.getElementById('stateRankings').innerHTML = states.slice(0, 8).map((state, i) => {
-        const score = 90 - i * 5 + Math.floor(Math.random() * 5);
-        return `
-            <div class="flex items-center gap-3">
-                <span class="text-xs font-mono" style="color:#64748b; width:20px;">#${i+1}</span>
-                <span class="text-xs truncate" style="color:#e2e8f0; width:100px;">${state.name}</span>
-                <div class="progress-bar flex-1"><div class="progress-fill" style="width:${score}%;"></div></div>
-                <span class="text-xs text-cyan font-mono" style="width:40px;">${score}%</span>
-            </div>
-        `;
-    }).join('');
+    function setRing(ringId, value) {
+        document.getElementById(ringId).setAttribute('stroke-dashoffset', String(220 - clamp(value, 0, 100) * 2.2));
+    }
+
+    function resilienceScore(state, climate) {
+        const source = climate || climateByState[state.id] || activeClimate;
+        if (!source) return 70;
+        return Math.round(clamp(92 - Math.max(0, source.temperature - 30) * 1.5 - Math.max(0, source.aqi - 100) / 12 + Math.min(source.humidity, 80) / 14 + Math.min(source.rainfall, 50) / 16, 52, 96));
+    }
+
+    function renderRankings() {
+        const ordered = [...states].sort((first, second) => resilienceScore(second, climateByState[second.id]) - resilienceScore(first, climateByState[first.id])).slice(0, 8);
+        if (activeState && !ordered.some((state) => state.id === activeState.id)) ordered[7] = activeState;
+        document.getElementById('stateRankings').innerHTML = ordered.map((state, index) => {
+            const score = resilienceScore(state, climateByState[state.id]);
+            return `<div class="flex items-center gap-3 analytics-ranking-row"><span class="text-xs font-mono theme-subtitle" style="width:20px;">#${index + 1}</span><span class="text-xs truncate analytics-ranking-state">${state.name}${activeState?.id === state.id ? ' · You' : ''}</span><div class="progress-bar flex-1"><div class="progress-fill" style="width:${score}%;"></div></div><span class="text-xs text-cyan font-mono" style="width:40px;">${score}%</span></div>`;
+        }).join('');
+    }
+
+    function updateDashboard(climate, state = null) {
+        activeClimate = climate;
+        activeState = state;
+        const place = state ? state.name : 'India';
+        document.getElementById('analyticsSubtitle').textContent = state ? `Climate and agricultural insights tailored to ${place}` : 'India-wide climate and agricultural analytics';
+        document.getElementById('indicatorTitle').textContent = `${place} indicators`;
+        document.getElementById('rankingTitle').textContent = state ? `Climate resilience near ${place}` : 'Top States by Climate Resilience';
+        document.getElementById('temperatureChartTitle').textContent = `${periodLabels[activePeriod]} temperature · ${place}`;
+        document.getElementById('rainfallChartTitle').textContent = `${periodLabels[activePeriod]} rainfall · ${place}`;
+        document.getElementById('aqiChartTitle').textContent = `${periodLabels[activePeriod]} air quality · ${place}`;
+        document.getElementById('summaryTemperature').textContent = `${climate.temperature}°C`;
+        document.getElementById('summaryHumidity').textContent = `${climate.humidity}%`;
+        document.getElementById('summaryRainfall').textContent = `${climate.rainfall} mm`;
+        document.getElementById('summaryAqi').textContent = `${climate.aqi} AQI`;
+
+        const water = clamp(42 + climate.rainfall * 1.25, 20, 96);
+        const crop = clamp(48 + climate.humidity * 0.45 - Math.max(0, climate.temperature - 34) * 3, 20, 96);
+        const heat = clamp(100 - Math.max(0, climate.temperature - 22) * 3.5, 15, 96);
+        const air = clamp(100 - climate.aqi / 3.8, 10, 96);
+        [['water', water], ['crop', crop], ['heat', heat], ['air', air]].forEach(([name, value]) => {
+            document.getElementById(`${name}Value`).textContent = `${Math.round(value)}%`;
+            setRing(`${name}Ring`, value);
+        });
+
+        const series = makeSeries(climate);
+        drawBarChart('chartTemp', series.temperature, '#ff8800', '°');
+        drawBarChart('chartRain', series.rainfall, '#00bfe8');
+        drawBarChart('chartAqi', series.aqi, '#d5a900');
+        renderRankings();
+    }
+
+    async function loadNationalAnalytics() {
+        const response = await fetch('/api/climate');
+        if (!response.ok) throw new Error('Unable to load climate analytics');
+        const payload = await response.json();
+        climateByState = Object.fromEntries(payload.data.map((entry) => [entry.state.id, entry.climate]));
+        const measurements = payload.data.map((entry) => entry.climate);
+        updateDashboard({ temperature: Number(average(measurements, 'temperature').toFixed(1)), humidity: Math.round(average(measurements, 'humidity')), rainfall: Number(average(measurements, 'rainfall').toFixed(1)), aqi: Math.round(average(measurements, 'aqi')) });
+    }
+
+    async function loadStateAnalytics(state, label) {
+        document.getElementById('locationLabel').textContent = `Loading analytics for ${state.name}…`;
+        const response = await fetch(`/api/climate?state_id=${state.id}`);
+        if (!response.ok) throw new Error('Unable to load local climate analytics');
+        const payload = await response.json();
+        climateByState[state.id] = payload.climate;
+        document.getElementById('locationLabel').textContent = label;
+        document.getElementById('locationDot').classList.add('is-live');
+        updateDashboard(payload.climate, state);
+    }
+
+    function requestLocation() {
+        if (!navigator.geolocation) {
+            document.getElementById('locationLabel').textContent = 'Location is not supported — using India-wide overview';
+            return;
+        }
+        document.getElementById('locationLabel').textContent = 'Requesting your location…';
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const nearest = closestState(position.coords.latitude, position.coords.longitude);
+            if (!nearest) return;
+            try {
+                await loadStateAnalytics(nearest.state, `Showing insights for ${nearest.state.name}`);
+            } catch (error) {
+                document.getElementById('locationLabel').textContent = 'Could not load local data — using India-wide overview';
+            }
+        }, () => {
+            document.getElementById('locationLabel').textContent = 'Location permission not granted — using India-wide overview';
+        }, { enableHighAccuracy: false, maximumAge: 300000, timeout: 10000 });
+    }
+
+    document.getElementById('useLocation').addEventListener('click', requestLocation);
+    document.querySelectorAll('#periodTabs .tab').forEach((tab) => {
+        tab.addEventListener('click', () => {
+            activePeriod = tab.dataset.period;
+            document.querySelectorAll('#periodTabs .tab').forEach((button) => button.classList.toggle('active', button === tab));
+            if (activeClimate) updateDashboard(activeClimate, activeState);
+        });
+    });
+    window.addEventListener('resize', () => { if (activeClimate) updateDashboard(activeClimate, activeState); });
+
+    loadNationalAnalytics().catch(() => {
+        document.getElementById('locationLabel').textContent = 'Analytics data is unavailable';
+    }).finally(requestLocation);
 </script>
 {% endblock %}
